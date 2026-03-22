@@ -1,9 +1,24 @@
-import svelteConfig from './svelte.config.js'
-import { defineConfig } from 'eslint/config'
-import globals from 'globals'
 import js from '@eslint/js'
-import ts from 'typescript-eslint'
+import { defineConfig } from 'eslint/config'
+import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import svelte from 'eslint-plugin-svelte'
+import unicorn from 'eslint-plugin-unicorn'
+import globals from 'globals'
+import ts from 'typescript-eslint'
+
+import svelteConfig from './svelte.config.js'
+
+const maxLinesPerFunction = {
+  max: 100,
+  skipBlankLines: true,
+  skipComments: true,
+}
+
+const maxLinesPerFunctionJsx = {
+  max: 350,
+  skipBlankLines: true,
+  skipComments: true,
+}
 
 export default defineConfig(
   {
@@ -23,6 +38,24 @@ export default defineConfig(
         ...globals.browser,
         ...globals.node,
       },
+    },
+  },
+  {
+    plugins: {
+      'simple-import-sort': simpleImportSort,
+      unicorn,
+    },
+    rules: {
+      'max-lines-per-function': ['error', maxLinesPerFunction],
+      'simple-import-sort/exports': 'error',
+      'simple-import-sort/imports': 'error',
+      'unicorn/filename-case': ['error', { case: 'kebabCase' }],
+    },
+  },
+  {
+    files: ['**/*.{jsx,tsx,svelte}'],
+    rules: {
+      'max-lines-per-function': ['error', maxLinesPerFunctionJsx],
     },
   },
   {

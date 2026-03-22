@@ -1,7 +1,15 @@
 <script lang="ts">
   import { invoke } from '@tauri-apps/api/core'
-  import type { PageMeta, PageDetail } from './lib/types'
+
+  import ActionButton from './components/action-button.svelte'
+  import AppHeader from './components/app-header.svelte'
+  import ErrorBanner from './components/error-banner.svelte'
+  import JsonPre from './components/json-pre.svelte'
+  import PanelTitle from './components/panel-title.svelte'
+  import TextArea from './components/text-area.svelte'
+  import TextField from './components/text-field.svelte'
   import * as pageTree from './lib/pages-helpers'
+  import type { PageDetail, PageMeta } from './lib/types'
 
   let pages = $state<PageMeta[]>([])
   let selectedId = $state<string | null>(null)
@@ -166,38 +174,19 @@
 </script>
 
 <div class="flex h-full min-h-0 flex-col bg-zinc-950 text-zinc-100">
-  <header
-    class="flex shrink-0 items-center justify-between border-b border-zinc-800 px-4 py-2"
-  >
-    <h1 class="text-sm font-semibold tracking-tight text-zinc-100">Lote</h1>
-    <p class="text-xs text-zinc-500">Local notes · Ollama · MCP (Tauri + Svelte, no Next.js)</p>
-  </header>
+  <AppHeader
+    title="Lote"
+    subtitle="Local notes · Ollama · MCP (Tauri + Svelte, no Next.js)"
+  />
 
-  {#if err}
-    <div class="shrink-0 border-b border-red-900/60 bg-red-950/40 px-4 py-2 text-sm text-red-200">
-      {err}
-    </div>
-  {/if}
+  <ErrorBanner message={err} />
 
   <div class="grid min-h-0 flex-1 grid-cols-[240px_1fr_320px] gap-0">
     <!-- Sidebar -->
     <aside class="flex min-h-0 flex-col border-r border-zinc-800 bg-zinc-900/40">
       <div class="flex gap-1 border-b border-zinc-800 p-2">
-        <button
-          type="button"
-          class="rounded-md bg-zinc-800 px-2 py-1 text-xs hover:bg-zinc-700"
-          onclick={() => newPage(true)}
-        >
-          + Page
-        </button>
-        <button
-          type="button"
-          class="rounded-md bg-zinc-800 px-2 py-1 text-xs hover:bg-zinc-700 disabled:opacity-40"
-          disabled={!selectedId}
-          onclick={() => newPage(false)}
-        >
-          + Child
-        </button>
+        <ActionButton onclick={() => newPage(true)}>+ Page</ActionButton>
+        <ActionButton disabled={!selectedId} onclick={() => newPage(false)}>+ Child</ActionButton>
       </div>
       <nav class="min-h-0 flex-1 overflow-y-auto p-2">
         {#each pageTree.orderedPages(pages) as p (p.id)}
@@ -220,8 +209,8 @@
     <!-- Editor -->
     <main class="flex min-h-0 flex-col">
       <div class="flex items-center gap-2 border-b border-zinc-800 px-3 py-2">
-        <input
-          class="min-w-0 flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm outline-none focus:border-zinc-500"
+        <TextField
+          class="min-w-0 flex-1"
           placeholder="Title"
           bind:value={title}
         />
@@ -239,41 +228,26 @@
             {/each}
           </select>
         </label>
-        <button
-          type="button"
-          class="rounded-md bg-emerald-800 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-40"
-          disabled={!selectedId}
-          onclick={() => void savePage()}
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          class="rounded-md bg-zinc-800 px-2 py-1 text-xs text-red-300 hover:bg-red-950/50 disabled:opacity-40"
-          disabled={!selectedId}
-          onclick={() => void deletePage()}
-        >
-          Delete
-        </button>
+        <ActionButton variant="primary" disabled={!selectedId} onclick={() => void savePage()}>Save</ActionButton>
+        <ActionButton variant="danger" disabled={!selectedId} onclick={() => void deletePage()}>Delete</ActionButton>
         {#if status}
           <span class="text-xs text-zinc-500">{status}</span>
         {/if}
       </div>
-      <textarea
-        class="min-h-0 flex-1 resize-none bg-zinc-950 p-4 font-mono text-sm leading-relaxed text-zinc-200 outline-none"
+      <TextArea
+        plain
+        class="min-h-0 flex-1 p-4 font-mono text-sm leading-relaxed text-zinc-200"
         placeholder="Markdown…"
         bind:value={body}
-      ></textarea>
+      />
     </main>
 
     <!-- Right: AI + MCP -->
     <aside class="flex min-h-0 flex-col border-l border-zinc-800 bg-zinc-900/30">
       <section class="flex min-h-0 flex-1 flex-col border-b border-zinc-800 p-3">
-        <h2 class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-          Ollama
-        </h2>
-        <input
-          class="mb-2 w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs"
+        <PanelTitle>Ollama</PanelTitle>
+        <TextField
+          class="mb-2 w-full text-xs"
           placeholder="Model name"
           bind:value={model}
         />
@@ -289,70 +263,50 @@
           {/if}
         </div>
         <div class="mt-2 flex gap-1">
-          <input
-            class="min-w-0 flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs"
+          <TextField
+            class="min-w-0 flex-1 text-xs"
             placeholder="Message…"
             bind:value={chatInput}
-            onkeydown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), void sendChat())}
+            onkeydown={(e) =>
+              e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), void sendChat())}
           />
-          <button
-            type="button"
-            class="rounded-md bg-zinc-800 px-2 py-1 text-xs hover:bg-zinc-700"
-            onclick={() => void sendChat()}
-            disabled={chatBusy}
-          >
-            Send
-          </button>
+          <ActionButton disabled={chatBusy} onclick={() => void sendChat()}>Send</ActionButton>
         </div>
       </section>
 
       <section class="flex max-h-[45%] min-h-0 flex-col p-3">
-        <h2 class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-          MCP client
-        </h2>
-        <input
-          class="mb-2 w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs"
+        <PanelTitle>MCP client</PanelTitle>
+        <TextField
+          class="mb-2 w-full text-xs"
           placeholder="MCP HTTP endpoint (JSON-RPC POST)"
           bind:value={mcpEndpoint}
         />
         <div class="mb-2 flex gap-1">
-          <button
-            type="button"
-            class="rounded-md bg-zinc-800 px-2 py-1 text-xs hover:bg-zinc-700"
-            onclick={() => void refreshMcpTools()}
-          >
-            List tools
-          </button>
+          <ActionButton onclick={() => void refreshMcpTools()}>List tools</ActionButton>
         </div>
-        <pre
-          class="mb-2 max-h-24 min-h-0 overflow-auto rounded-md border border-zinc-800 bg-zinc-950 p-2 text-[10px] text-zinc-400"
-        >{mcpToolsRaw || '—'}</pre>
-        <input
-          class="mb-1 w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs"
+        <JsonPre
+          class="mb-2 max-h-24 min-h-0 p-2 text-[10px] text-zinc-400"
+          text={mcpToolsRaw}
+        />
+        <TextField
+          class="mb-1 w-full text-xs"
           placeholder="tool name"
           bind:value={mcpToolName}
         />
-        <textarea
-          class="mb-2 min-h-[52px] w-full resize-none rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 font-mono text-[10px]"
+        <TextArea
+          class="mb-2 min-h-[52px] w-full px-2 py-1 font-mono text-[10px]"
           placeholder="JSON object for arguments"
           bind:value={mcpToolArgs}
-        ></textarea>
-        <button
-          type="button"
-          class="mb-2 rounded-md bg-zinc-800 px-2 py-1 text-xs hover:bg-zinc-700"
-          onclick={() => void runMcpTool()}
-        >
-          Call tool
-        </button>
-        <pre
-          class="min-h-0 flex-1 overflow-auto rounded-md border border-zinc-800 bg-zinc-950 p-2 text-[10px] text-zinc-300"
-        >{mcpResult || '—'}</pre>
+        />
+        <ActionButton class="mb-2" onclick={() => void runMcpTool()}>Call tool</ActionButton>
+        <JsonPre
+          class="min-h-0 flex-1 p-2 text-[10px] text-zinc-300"
+          text={mcpResult}
+        />
       </section>
 
       <section class="border-t border-zinc-800 p-3">
-        <h2 class="mb-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          MCP server (stub)
-        </h2>
+        <PanelTitle tone="muted" class="!mb-1">MCP server (stub)</PanelTitle>
         <p class="text-[10px] leading-snug text-zinc-600">
           Exposing this app as an MCP server for cloud AIs is not implemented in this MVP.
         </p>
