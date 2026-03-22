@@ -1,0 +1,32 @@
+---
+description: "Reusable Svelte UI — folder-per-component (index, svelte, stories, tests) under src, any parent path"
+globs: src/**/*.svelte
+alwaysApply: false
+---
+
+# Frontend component layout
+
+**Reusable UI** (anything you would import and compose) must follow this layout **wherever it lives under `src/`**—not only under `src/components/`. Parent directories (`src/lib/…`, `src/features/…`, etc.) only group features; the component folder pattern is the same.
+
+**Out of scope** (keep as framework expects): root shells such as `App.svelte`, `main.ts` entry wiring, and SvelteKit route files like `+page.svelte` / `+layout.svelte` unless you are deliberately colocating a dedicated widget next to a route using this pattern.
+
+## Structure
+
+For a component whose folder name is `<name>` (kebab-case, e.g. `action-button`):
+
+```text
+src/<...>/<name>/
+  index.ts              # Re-export the component (and types if any)
+  <name>.svelte         # The Svelte component
+  <name>.stories.ts     # Story definitions
+  <name>.test.ts        # Unit / component tests
+```
+
+- **Folder name** = public component id; **`index.ts`**, **`<name>.svelte`**, **`<name>.stories.ts`**, **`<name>.test.ts`** all share that basename.
+- **`index.ts`** is the stable import surface for consumers outside the folder.
+
+When adding or refactoring reusable UI, create or move files to match this layout. If stories or tests are not wired yet, still add the placeholder files when introducing a new component so tooling can be adopted without renaming.
+
+## References
+
+- [Cursor Rules — project rules](https://cursor.com/docs/rules)
