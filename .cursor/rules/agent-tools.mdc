@@ -1,0 +1,37 @@
+---
+description: "Ollama agent tools — implement ToolHandler, register in ToolRegistry, JSON schema for Ollama"
+globs: src-tauri/src/agent/**/*.rs,src-tauri/src/commands/ollama_agent.rs
+alwaysApply: false
+---
+
+# Agent tools (Ollama tool calling)
+
+The AI chat agent (`ollama_agent_chat`) only **executes tools registered in Rust**. The model may propose tool names from the `tools` payload; execution is a **whitelist** via `ToolRegistry`. User-facing strings and code comments stay **English** (see `AGENTS.md`).
+
+## Where tools live
+
+- **Trait and registry**: `src-tauri/src/agent/registry.rs` — `ToolHandler`, `ToolRegistry`, `with_builtin_tools()`.
+- **Wire-up**: `src-tauri/src/commands/ollama_agent.rs` — uses `ToolRegistry::with_builtin_tools()` (no extra registration step here unless you change how the registry is built).
+- **Types**: `src-tauri/src/agent/types.rs` — `ToolDefinition` / `ToolFunctionDef` (Ollama `/api/chat` JSON shape).
+
+## Adding a tool
+
+1. **Implement `ToolHandler`** for a unit struct (or a struct with dependencies if you need them later):
+   - `definition()` returns a `ToolDefinition` with `typ: "function"` and a **`parameters` JSON Schema** (`type`, `properties`, `required`, descriptions). This is what Ollama sends to the model; keep names and types stable.
+   - `invoke(&self, arguments: &serde_json::Value) -> Result<String, String>` parses `arguments`, validates inputs, performs the side effect, and returns a **short string** for the `role: "tool"` message (the model reads this as plain text).
+2. **Register** the handler in `ToolRegistry::with_builtin_tools()` with `r.register(Arc::new(YourTool))`.
+   - Use a **unique `function.name`**; it must match what the model emits and what `invoke` dispatches on.
+3. **Tests**: Add a focused unit test in `registry.rs` (e.g. `invoke` for your tool) or extend agent tests if behavior is cross-cutting.
+4. **Models**: Tool calling requires an [Ollama model that supports tools](https://ollama.com/search?c=tool); a model that doesn’t support tools may never emit `tool_calls`.
+
+## Security and design
+
+- **Never** execute a tool name that is not in the registry (already enforced by `ToolRegistry::invoke`).
+- Prefer **minimal, explicit parameters** in the schema; validate every field in `invoke`.
+- If a tool needs **Tauri state** (e.g. `AppHandle`, DB paths), inject it via constructor fields on your handler struct and build the registry where that state is available (refactor `builtin_tools()` / `with_builtin_tools` as needed); do not pass secrets to the frontend.
+
+## References
+
+- **@** `src-tauri/src/agent/registry.rs` — `EchoTool` example, `ToolRegistry::register`.
+- **@** `src-tauri/src/agent/runner.rs` — `run_agent_loop` (tool → tool message → next model turn).
+- [Ollama chat API — tools](https://github.com/ollama/ollama/blob/main/docs/api.md) (request/response shape).

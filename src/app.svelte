@@ -11,6 +11,20 @@
   import * as pageTree from './lib/pages-helpers'
   import type { PageDetail, PageMeta } from './lib/types'
 
+  /** Matches Rust `ChatMessage` / Ollama JSON (snake_case fields). */
+  type AgentChatMessage = {
+    role: string
+    content?: string
+    tool_calls?: { function: { name: string; arguments: unknown } }[]
+    tool_name?: string
+  }
+
+  type OllamaAgentResult = {
+    messages: AgentChatMessage[]
+    assistantReply: string
+    stepsUsed: number
+  }
+
   let pages = $state<PageMeta[]>([])
   let selectedId = $state<string | null>(null)
   let title = $state('')
@@ -23,7 +37,7 @@
   /** Ollama library tag: https://ollama.com/library/gemma3:1b */
   let model = $state('gemma3:1b')
   let chatInput = $state('')
-  let chatLog = $state<{ role: 'user' | 'assistant'; text: string }[]>([])
+  let chatMessages = $state<AgentChatMessage[]>([])
   let chatBusy = $state(false)
 
   let mcpEndpoint = $state('')
@@ -115,11 +129,15 @@
     if (!msg || chatBusy) return
     chatBusy = true
     err = ''
-    chatLog = [...chatLog, { role: 'user', text: msg }]
+    const messages: AgentChatMessage[] = [...chatMessages, { role: 'user', content: msg }]
     chatInput = ''
     try {
-      const reply = await invoke<string>('ollama_chat', { model, userMessage: msg })
-      chatLog = [...chatLog, { role: 'assistant', text: reply }]
+      const result = await invoke<OllamaAgentResult>('ollama_agent_chat', {
+        model,
+        messages,
+        max_steps: 8,
+      })
+      chatMessages = result.messages
     } catch (e) {
       err = String(e)
     } finally {
@@ -252,11 +270,29 @@
           bind:value={model}
         />
         <div class="min-h-0 flex-1 overflow-y-auto rounded-md border border-zinc-200 bg-white p-2 text-xs">
-          {#each chatLog as m, i (i)}
-            <div class="mb-2 {m.role === 'user' ? 'text-zinc-800' : 'text-emerald-700'}">
-              <span class="font-semibold">{m.role === 'user' ? 'You' : 'Model'}:</span>
-              {m.text}
-            </div>
+          {#each chatMessages as m, i (i)}
+            {#if m.role === 'user'}
+              <div class="mb-2 text-zinc-800">
+                <span class="font-semibold">You:</span>
+                {m.content ?? ''}
+              </div>
+            {:else if m.role === 'tool'}
+              <div class="mb-2 text-amber-900">
+                <span class="font-semibold">Tool ({m.tool_name ?? '?'}):</span>
+                {m.content ?? ''}
+              </div>
+            {:else}
+              <div class="mb-2 text-emerald-800">
+                <span class="font-semibold">Model:</span>
+                {m.content ?? ''}
+                {#if m.tool_calls?.length}
+                  <span class="text-zinc-500">
+                    [tools:
+                    {m.tool_calls.map((t) => t.function?.name ?? '?').join(', ')}]
+                  </span>
+                {/if}
+              </div>
+            {/if}
           {/each}
           {#if chatBusy}
             <p class="text-zinc-400">…</p>

@@ -28,6 +28,8 @@ export default defineConfig(
       'dist/**',
       'node_modules/**',
       'src-tauri/target/**',
+      'target/**',
+      'target-agent-test/**',
       'package-lock.json',
       'storybook-static/**',
     ],
