@@ -1,74 +1,74 @@
 # Lote
 
-ローカル向けの Notion 風メモ + **Ollama** チャット + **MCP クライアント**（Tauri + Svelte + Vite）。Next.js は使いません。
+A local-first Notion-style notes app with **Ollama** chat and an **MCP client** (Tauri + Svelte + Vite). Next.js is not used.
 
-## 前提
+## Prerequisites
 
-- [Node.js](https://nodejs.org/)（npm 付き）
-- [Rust](https://rustup.rs/)（`rustup`）。このリポジトリは `src-tauri/rust-toolchain.toml` で **Rust 1.88** を指定しています（初回は `rustup` が自動取得します）。
-- Windows: [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/)（通常は OS に同梱）
-- Ollama を使う場合: アプリの既定モデルは **`gemma3:1b`**（[Gemma 3](https://ollama.com/library/gemma3)）。未入手なら `ollama pull gemma3:1b`。`gamma3` というタグは Ollama にありません（`gemma` の誤記のことが多いです）
+- [Node.js](https://nodejs.org/) (with npm)
+- [Rust](https://rustup.rs/) (`rustup`). This repo pins **Rust 1.88** in `src-tauri/rust-toolchain.toml` (rustup will fetch it on first use).
+- Windows: [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) (usually bundled with the OS)
+- For Ollama: the app’s default model is **`gemma3:1b`** ([Gemma 3](https://ollama.com/library/gemma3)). If you don’t have it yet, run `ollama pull gemma3:1b`. There is no `gamma3` tag in Ollama (a common typo is `gemma`).
 
-## 依存関係のインストール
+## Install dependencies
 
 ```bash
 npm install
 ```
 
-## 起動（デスクトップアプリ）
+## Run (desktop app)
 
-開発時は Vite の dev サーバと Tauri のウィンドウが立ち上がります。
+In development, the Vite dev server and a Tauri window start.
 
 ```bash
 npm run tauri:dev
 ```
 
-または:
+Or:
 
 ```bash
 npx tauri dev
 ```
 
-## フロントのみ（ブラウザで確認）
+## Frontend only (browser)
 
-Tauri なしで UI だけ動かす場合（`invoke` は失敗します）。
+To run the UI without Tauri (`invoke` calls will fail):
 
 ```bash
 npm run dev
 ```
 
-ブラウザで表示される URL（既定は `http://localhost:5173`）を開きます。
+Open the URL shown in the terminal (default `http://localhost:5173`).
 
-## ビルド
+## Build
 
-### フロント（静的ファイル）
+### Frontend (static assets)
 
 ```bash
 npm run build
 ```
 
-成果物は `dist/` です。
+Output is in `dist/`.
 
-### デスクトップ用インストーラ / 実行ファイル
+### Desktop installer / binary
 
 ```bash
 npm run tauri:build
 ```
 
-または:
+Or:
 
 ```bash
 npx tauri build
 ```
 
-Windows では `src-tauri/target/release/bundle/` 以下に MSI などが生成されます。実行ファイルは `src-tauri/target/release/` にあります。
+On Windows, MSI and similar artifacts appear under `src-tauri/target/release/bundle/`. The executable is under `src-tauri/target/release/`.
 
-## 型チェック
+## Type check
 
 ```bash
 npm run check
 ```
 
-## データの保存場所
+## Where data is stored
 
-ページの Markdown は OS のアプリデータ配下（例: Windows では `%APPDATA%` 付近）の `lote/pages/` に保存されます。
+Page Markdown is saved under the OS app data directory (e.g. near `%APPDATA%` on Windows) in `lote/pages/`.
