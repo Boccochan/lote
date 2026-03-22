@@ -21,10 +21,10 @@
 
   const base = $derived(
     variant === 'primary'
-      ? 'rounded-md bg-emerald-800 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-40'
+      ? 'rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-40'
       : variant === 'danger'
-        ? 'rounded-md bg-zinc-800 px-2 py-1 text-xs text-red-300 hover:bg-red-950/50 disabled:opacity-40'
-        : 'rounded-md bg-zinc-800 px-2 py-1 text-xs hover:bg-zinc-700 disabled:opacity-40',
+        ? 'rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700 hover:bg-red-100 disabled:opacity-40'
+        : 'rounded-md border border-zinc-200 bg-zinc-100 px-2 py-1 text-xs text-zinc-800 hover:bg-zinc-200 disabled:opacity-40',
   )
 </script>
 

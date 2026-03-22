@@ -173,7 +173,7 @@
   })
 </script>
 
-<div class="flex h-full min-h-0 flex-col bg-zinc-950 text-zinc-100">
+<div class="flex h-full min-h-0 flex-col bg-white text-zinc-900">
   <AppHeader
     title="Lote"
     subtitle="Local notes · Ollama · MCP (Tauri + Svelte, no Next.js)"
@@ -183,8 +183,8 @@
 
   <div class="grid min-h-0 flex-1 grid-cols-[240px_1fr_320px] gap-0">
     <!-- Sidebar -->
-    <aside class="flex min-h-0 flex-col border-r border-zinc-800 bg-zinc-900/40">
-      <div class="flex gap-1 border-b border-zinc-800 p-2">
+    <aside class="flex min-h-0 flex-col border-r border-zinc-200 bg-zinc-50/80">
+      <div class="flex gap-1 border-b border-zinc-200 p-2">
         <ActionButton onclick={() => newPage(true)}>+ Page</ActionButton>
         <ActionButton disabled={!selectedId} onclick={() => newPage(false)}>+ Child</ActionButton>
       </div>
@@ -193,8 +193,8 @@
           <button
             type="button"
             class="mb-0.5 w-full rounded-md px-2 py-1.5 text-left text-sm {selectedId === p.id
-              ? 'bg-zinc-700 text-white'
-              : 'text-zinc-300 hover:bg-zinc-800'}"
+              ? 'bg-zinc-200 text-zinc-900'
+              : 'text-zinc-700 hover:bg-zinc-100'}"
             style="padding-left: {0.5 + pageTree.depthOf(p, pages) * 0.75}rem"
             onclick={() => openPage(p.id)}
           >
@@ -208,16 +208,16 @@
 
     <!-- Editor -->
     <main class="flex min-h-0 flex-col">
-      <div class="flex items-center gap-2 border-b border-zinc-800 px-3 py-2">
+      <div class="flex items-center gap-2 border-b border-zinc-200 px-3 py-2">
         <TextField
           class="min-w-0 flex-1"
           placeholder="Title"
           bind:value={title}
         />
-        <label class="flex items-center gap-1 text-xs text-zinc-400">
+        <label class="flex items-center gap-1 text-xs text-zinc-600">
           Parent
           <select
-            class="rounded-md border border-zinc-700 bg-zinc-900 px-1 py-1 text-xs"
+            class="rounded-md border border-zinc-300 bg-white px-1 py-1 text-xs text-zinc-900"
             bind:value={parentSelect}
           >
             <option value="">—</option>
@@ -236,30 +236,30 @@
       </div>
       <TextArea
         plain
-        class="min-h-0 flex-1 p-4 font-mono text-sm leading-relaxed text-zinc-200"
+        class="min-h-0 flex-1 p-4 font-mono text-sm leading-relaxed text-zinc-800"
         placeholder="Markdown…"
         bind:value={body}
       />
     </main>
 
     <!-- Right: AI + MCP -->
-    <aside class="flex min-h-0 flex-col border-l border-zinc-800 bg-zinc-900/30">
-      <section class="flex min-h-0 flex-1 flex-col border-b border-zinc-800 p-3">
+    <aside class="flex min-h-0 flex-col border-l border-zinc-200 bg-zinc-50/50">
+      <section class="flex min-h-0 flex-1 flex-col border-b border-zinc-200 p-3">
         <PanelTitle>Ollama</PanelTitle>
         <TextField
           class="mb-2 w-full text-xs"
           placeholder="Model name"
           bind:value={model}
         />
-        <div class="min-h-0 flex-1 overflow-y-auto rounded-md border border-zinc-800 bg-zinc-950/80 p-2 text-xs">
+        <div class="min-h-0 flex-1 overflow-y-auto rounded-md border border-zinc-200 bg-white p-2 text-xs">
           {#each chatLog as m, i (i)}
-            <div class="mb-2 {m.role === 'user' ? 'text-zinc-200' : 'text-emerald-200/90'}">
+            <div class="mb-2 {m.role === 'user' ? 'text-zinc-800' : 'text-emerald-700'}">
               <span class="font-semibold">{m.role === 'user' ? 'You' : 'Model'}:</span>
               {m.text}
             </div>
           {/each}
           {#if chatBusy}
-            <p class="text-zinc-500">…</p>
+            <p class="text-zinc-400">…</p>
           {/if}
         </div>
         <div class="mt-2 flex gap-1">
@@ -285,7 +285,7 @@
           <ActionButton onclick={() => void refreshMcpTools()}>List tools</ActionButton>
         </div>
         <JsonPre
-          class="mb-2 max-h-24 min-h-0 p-2 text-[10px] text-zinc-400"
+          class="mb-2 max-h-24 min-h-0 p-2 text-[10px] text-zinc-600"
           text={mcpToolsRaw}
         />
         <TextField
@@ -300,14 +300,14 @@
         />
         <ActionButton class="mb-2" onclick={() => void runMcpTool()}>Call tool</ActionButton>
         <JsonPre
-          class="min-h-0 flex-1 p-2 text-[10px] text-zinc-300"
+          class="min-h-0 flex-1 p-2 text-[10px] text-zinc-700"
           text={mcpResult}
         />
       </section>
 
-      <section class="border-t border-zinc-800 p-3">
+      <section class="border-t border-zinc-200 p-3">
         <PanelTitle tone="muted" class="!mb-1">MCP server (stub)</PanelTitle>
-        <p class="text-[10px] leading-snug text-zinc-600">
+        <p class="text-[10px] leading-snug text-zinc-500">
           Exposing this app as an MCP server for cloud AIs is not implemented in this MVP.
         </p>
       </section>

@@ -13,8 +13,8 @@
 
   const base = $derived(
     plain
-      ? 'resize-none bg-zinc-950 outline-none'
-      : 'resize-none rounded-md border border-zinc-700 bg-zinc-900 outline-none focus:border-zinc-500',
+      ? 'resize-none bg-white text-zinc-900 outline-none placeholder:text-zinc-400'
+      : 'resize-none rounded-md border border-zinc-300 bg-white text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-500',
   )
 </script>
 

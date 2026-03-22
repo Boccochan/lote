@@ -11,7 +11,7 @@
     children: Snippet
   } = $props()
 
-  const toneClass = $derived(tone === 'muted' ? 'text-zinc-500' : 'text-zinc-400')
+  const toneClass = $derived(tone === 'muted' ? 'text-zinc-400' : 'text-zinc-600')
 </script>
 
 <h2 class="mb-2 text-xs font-semibold uppercase tracking-wide {toneClass} {className}">

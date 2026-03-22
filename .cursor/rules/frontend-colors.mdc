@@ -1,0 +1,30 @@
+---
+description: "Frontend color palette — Tailwind zinc neutrals, emerald primary, red destructive/errors"
+globs: src/**/*.{svelte,css}
+alwaysApply: false
+---
+
+# Frontend colors
+
+Use **Tailwind utility classes** for color. Do not introduce ad-hoc hex/RGB in components unless there is a strong reason; prefer extending theme tokens in `app.css` if a new recurring color is needed.
+
+## Neutrals (zinc)
+
+- **Page / main surfaces**: `bg-white`, primary text `text-zinc-900`.
+- **Secondary panels / subtle backgrounds**: `bg-zinc-50` (opacity variants like `bg-zinc-50/80` are OK when layering).
+- **Borders**: `border-zinc-200` for dividers; `border-zinc-300` on inputs; `focus:border-zinc-500` for focused fields.
+- **Text hierarchy**: body `text-zinc-800` / `text-zinc-700`; secondary `text-zinc-600`; muted `text-zinc-500`; placeholders `placeholder:text-zinc-400`.
+- **Interactive neutrals**: hover/selected surfaces `bg-zinc-100` → `bg-zinc-200`; avoid mixing unrelated gray scales (e.g. do not combine `gray-*` with `zinc-*` in the same UI).
+
+## Semantic accents
+
+- **Primary / success / assistant emphasis**: `emerald-*` (e.g. `text-emerald-700` for assistant labels, `bg-emerald-600` / `hover:bg-emerald-500` for primary buttons).
+- **Errors and destructive actions**: `red-*` with light surfaces (`bg-red-50`, `border-red-200`, `text-red-700` / `text-red-800`).
+
+Keep semantic colors consistent: one role per color family (emerald = primary/positive emphasis, red = error/destructive).
+
+## References
+
+- Global base: `src/app.css` — `body` uses `bg-white` and `text-zinc-900`.
+- **@** `src/components/action-button.svelte` — primary / danger / neutral button tones.
+- **@** `src/components/error-banner.svelte` — error strip pattern.
