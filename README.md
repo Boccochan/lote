@@ -1,13 +1,6 @@
 # Lote
 
-A local-first Notion-style notes app with **Ollama** chat and an **MCP client** (Tauri + Svelte + Vite). Next.js is not used.
-
-## Prerequisites
-
-- [Node.js](https://nodejs.org/) (with npm)
-- [Rust](https://rustup.rs/) (`rustup`). This repo pins **Rust 1.88** in `src-tauri/rust-toolchain.toml` (rustup will fetch it on first use).
-- Windows: [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) (usually bundled with the OS)
-- For Ollama: the app’s default model is **`gemma3:1b`** ([Gemma 3](https://ollama.com/library/gemma3)). If you don’t have it yet, run `ollama pull gemma3:1b`. There is no `gamma3` tag in Ollama (a common typo is `gemma`).
+A local-first workspace app with notes, **Ollama** chat, and an **MCP client**.
 
 ## Install dependencies
 
