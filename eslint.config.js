@@ -1,6 +1,8 @@
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
 import js from '@eslint/js'
 import { defineConfig } from 'eslint/config'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
+import storybook from 'eslint-plugin-storybook'
 import svelte from 'eslint-plugin-svelte'
 import unicorn from 'eslint-plugin-unicorn'
 import globals from 'globals'
@@ -27,6 +29,7 @@ export default defineConfig(
       'node_modules/**',
       'src-tauri/target/**',
       'package-lock.json',
+      'storybook-static/**',
     ],
   },
   js.configs.recommended,
@@ -69,4 +72,5 @@ export default defineConfig(
       },
     },
   },
+  ...storybook.configs['flat/recommended'],
 )

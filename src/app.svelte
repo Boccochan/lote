@@ -1,13 +1,13 @@
 <script lang="ts">
   import { invoke } from '@tauri-apps/api/core'
 
-  import ActionButton from './components/action-button.svelte'
-  import AppHeader from './components/app-header.svelte'
-  import ErrorBanner from './components/error-banner.svelte'
-  import JsonPre from './components/json-pre.svelte'
-  import PanelTitle from './components/panel-title.svelte'
-  import TextArea from './components/text-area.svelte'
-  import TextField from './components/text-field.svelte'
+  import ActionButton from './components/action-button'
+  import AppHeader from './components/app-header'
+  import ErrorBanner from './components/error-banner'
+  import JsonPre from './components/json-pre'
+  import PanelTitle from './components/panel-title'
+  import TextArea from './components/text-area'
+  import TextField from './components/text-field'
   import * as pageTree from './lib/pages-helpers'
   import type { PageDetail, PageMeta } from './lib/types'
 
