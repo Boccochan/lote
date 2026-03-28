@@ -1,5 +1,6 @@
 mod agent;
 mod commands;
+mod domain;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -20,8 +21,9 @@ pub fn run() {
             commands::pages::pages_create,
             commands::pages::pages_save,
             commands::pages::pages_delete,
-            commands::ollama::ollama_chat,
-            commands::ollama_agent::ollama_agent_chat,
+            commands::pages::pages_search,
+            commands::chat::chat_simple,
+            commands::chat::agent_chat,
             commands::mcp::mcp_list_tools,
             commands::mcp::mcp_call_tool,
         ])

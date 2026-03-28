@@ -6,12 +6,12 @@ alwaysApply: false
 
 # Agent tools (Ollama tool calling)
 
-The AI chat agent (`ollama_agent_chat`) only **executes tools registered in Rust**. The model may propose tool names from the `tools` payload; execution is a **whitelist** via `ToolRegistry`. User-facing strings and code comments stay **English** (see `AGENTS.md`).
+The AI chat agent (`agent_chat`) only **executes tools registered in Rust**. The model may propose tool names from the `tools` payload; execution is a **whitelist** via `ToolRegistry`. User-facing strings and code comments stay **English** (see `AGENTS.md`).
 
 ## Where tools live
 
-- **Trait and registry**: `src-tauri/src/agent/registry.rs` — `ToolHandler`, `ToolRegistry`, `with_builtin_tools()`.
-- **Wire-up**: `src-tauri/src/commands/ollama_agent.rs` — uses `ToolRegistry::with_builtin_tools()` (no extra registration step here unless you change how the registry is built).
+- **Trait and registry**: `src-tauri/src/agent/registry.rs` — `ToolHandler`, `ToolRegistry`, `with_builtin_tools(app)` (needs `AppHandle` for tools that read app data, e.g. `search_pages`).
+- **Wire-up**: `src-tauri/src/commands/ollama_agent.rs` — builds `ToolRegistry::with_builtin_tools(app)` per request.
 - **Types**: `src-tauri/src/agent/types.rs` — `ToolDefinition` / `ToolFunctionDef` (Ollama `/api/chat` JSON shape).
 
 ## Adding a tool

@@ -9,7 +9,7 @@
   import TextArea from './components/text-area'
   import TextField from './components/text-field'
   import * as pageTree from './lib/pages-helpers'
-  import type { PageDetail, PageMeta } from './lib/types'
+  import type { PageDetail, PageMeta, SearchHit } from './lib/types'
 
   /** Matches Rust `ChatMessage` / Ollama JSON (snake_case fields). */
   type AgentChatMessage = {
@@ -19,10 +19,11 @@
     tool_name?: string
   }
 
-  type OllamaAgentResult = {
+  type AgentChatResult = {
     messages: AgentChatMessage[]
     assistantReply: string
     stepsUsed: number
+    debugTrace?: string[]
   }
 
   let pages = $state<PageMeta[]>([])
@@ -34,17 +35,23 @@
   let status = $state('')
   let err = $state('')
 
-  /** Ollama library tag: https://ollama.com/library/gemma3:1b */
-  let model = $state('gemma3:1b')
+  /** Ollama model tag. See https://ollama.com/search */
+  let model = $state('orieg/gemma3-tools:1b')
   let chatInput = $state('')
   let chatMessages = $state<AgentChatMessage[]>([])
   let chatBusy = $state(false)
+  let showAgentDebug = $state(false)
+  let agentDebugTrace = $state<string[]>([])
 
   let mcpEndpoint = $state('')
   let mcpToolsRaw = $state('')
   let mcpToolName = $state('')
   let mcpToolArgs = $state('{}')
   let mcpResult = $state('')
+
+  let searchQuery = $state('')
+  let searchHits = $state<SearchHit[]>([])
+  let searchBusy = $state(false)
 
   async function loadPages() {
     err = ''
@@ -58,6 +65,36 @@
       }
     } catch (e) {
       err = String(e)
+    }
+  }
+
+  /** Fragment used for in-app page links (open in editor on click). */
+  function pageHref(id: string): string {
+    return `#page/${encodeURIComponent(id)}`
+  }
+
+  function parseSearchHitsFromTool(content: string | undefined): SearchHit[] | null {
+    if (!content?.trim()) return null
+    try {
+      const v = JSON.parse(content) as unknown
+      if (!Array.isArray(v)) return null
+      const out: SearchHit[] = []
+      for (const row of v) {
+        if (!row || typeof row !== 'object') continue
+        const ent = (row as { entity?: { id?: unknown; kind?: unknown }; title?: unknown }).entity
+        const id = ent?.id
+        if (typeof id !== 'string' || !id) continue
+        const title = (row as { title?: unknown }).title
+        const snippet = (row as { snippet?: unknown }).snippet
+        out.push({
+          entity: { kind: typeof ent?.kind === 'string' ? ent.kind : 'page', id },
+          title: typeof title === 'string' ? title : '',
+          snippet: typeof snippet === 'string' ? snippet : undefined,
+        })
+      }
+      return out
+    } catch {
+      return null
     }
   }
 
@@ -108,6 +145,23 @@
     }
   }
 
+  async function runPageSearch() {
+    const q = searchQuery.trim()
+    if (!q) {
+      searchHits = []
+      return
+    }
+    searchBusy = true
+    err = ''
+    try {
+      searchHits = await invoke<SearchHit[]>('pages_search', { query: q, limit: 25 })
+    } catch (e) {
+      err = String(e)
+    } finally {
+      searchBusy = false
+    }
+  }
+
   async function deletePage() {
     if (!selectedId) return
     if (!confirm('Delete this page?')) return
@@ -132,14 +186,16 @@
     const messages: AgentChatMessage[] = [...chatMessages, { role: 'user', content: msg }]
     chatInput = ''
     try {
-      const result = await invoke<OllamaAgentResult>('ollama_agent_chat', {
+      const result = await invoke<AgentChatResult>('agent_chat', {
         model,
         messages,
         max_steps: 8,
       })
-      chatMessages = result.messages
+      chatMessages = (result.messages ?? []).filter((m) => m.role !== 'system')
+      agentDebugTrace = result.debugTrace ?? []
     } catch (e) {
       err = String(e)
+      agentDebugTrace = []
     } finally {
       chatBusy = false
     }
@@ -206,6 +262,40 @@
         <ActionButton onclick={() => newPage(true)}>+ Page</ActionButton>
         <ActionButton disabled={!selectedId} onclick={() => newPage(false)}>+ Child</ActionButton>
       </div>
+      <div class="border-b border-zinc-200 p-2">
+        <div class="flex gap-1">
+          <TextField
+            class="min-w-0 flex-1 text-xs"
+            placeholder="Search pages…"
+            bind:value={searchQuery}
+            onkeydown={(e) =>
+              e.key === 'Enter' && (e.preventDefault(), void runPageSearch())}
+          />
+          <ActionButton disabled={searchBusy} onclick={() => void runPageSearch()}>Search</ActionButton>
+        </div>
+        {#if searchHits.length > 0}
+          <p class="mt-2 text-[10px] font-medium uppercase tracking-wide text-zinc-500">Results</p>
+          <ul class="mt-1 max-h-40 list-none space-y-2 overflow-y-auto pl-0">
+            {#each searchHits as h (h.entity.id)}
+              <li>
+                <a
+                  href={pageHref(h.entity.id)}
+                  class="block text-sm font-medium text-sky-700 underline decoration-sky-600/50 underline-offset-2 hover:text-sky-900 hover:decoration-sky-800"
+                  onclick={(e) => {
+                    e.preventDefault()
+                    void openPage(h.entity.id)
+                  }}
+                >
+                  {h.title || '(untitled)'}
+                </a>
+                {#if h.snippet}
+                  <p class="mt-0.5 line-clamp-2 pl-0 text-[10px] leading-snug text-zinc-500">{h.snippet}</p>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </div>
       <nav class="min-h-0 flex-1 overflow-y-auto p-2">
         {#each pageTree.orderedPages(pages) as p (p.id)}
           <button
@@ -269,12 +359,54 @@
           placeholder="Model name"
           bind:value={model}
         />
+        <label class="mb-2 flex cursor-pointer items-center gap-2 text-[10px] text-zinc-600">
+          <input type="checkbox" bind:checked={showAgentDebug} class="rounded border-zinc-300" />
+          Show agent debug (tool trace)
+        </label>
+        {#if showAgentDebug && agentDebugTrace.length > 0}
+          <JsonPre
+            class="mb-2 max-h-28 min-h-0 p-2 text-[10px] leading-snug text-zinc-600"
+            text={agentDebugTrace.join('\n')}
+          />
+        {/if}
         <div class="min-h-0 flex-1 overflow-y-auto rounded-md border border-zinc-200 bg-white p-2 text-xs">
-          {#each chatMessages as m, i (i)}
+          {#each chatMessages.filter((m) => m.role !== 'system') as m, i (i)}
             {#if m.role === 'user'}
               <div class="mb-2 text-zinc-800">
                 <span class="font-semibold">You:</span>
                 {m.content ?? ''}
+              </div>
+            {:else if m.role === 'tool' && m.tool_name === 'search_pages'}
+              {@const toolHits = parseSearchHitsFromTool(m.content)}
+              <div class="mb-2 text-amber-950">
+                <span class="font-semibold">Tool (search_pages):</span>
+                {#if toolHits !== null}
+                  {#if toolHits.length === 0}
+                    <p class="mt-1 text-[11px] text-amber-900/90">No matching pages.</p>
+                  {:else}
+                    <ul class="mt-1 list-none space-y-2 pl-0">
+                      {#each toolHits as h (h.entity.id)}
+                        <li>
+                          <a
+                            href={pageHref(h.entity.id)}
+                            class="text-[12px] font-medium text-sky-800 underline decoration-sky-600/50 underline-offset-2 hover:text-sky-950"
+                            onclick={(e) => {
+                              e.preventDefault()
+                              void openPage(h.entity.id)
+                            }}
+                          >
+                            {h.title || '(untitled)'}
+                          </a>
+                          {#if h.snippet}
+                            <p class="mt-0.5 line-clamp-2 text-[10px] leading-snug text-zinc-600">{h.snippet}</p>
+                          {/if}
+                        </li>
+                      {/each}
+                    </ul>
+                  {/if}
+                {:else}
+                  <pre class="mt-1 max-h-32 overflow-auto whitespace-pre-wrap break-words font-mono text-[10px] text-amber-900/90">{m.content ?? ''}</pre>
+                {/if}
               </div>
             {:else if m.role === 'tool'}
               <div class="mb-2 text-amber-900">

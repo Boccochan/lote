@@ -1,9 +1,9 @@
-//! Ollama-compatible chat and tool types (JSON shape matches `/api/chat`).
+//! Internal chat and tool types used by the app agent loop.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-/// One chat message for Ollama `/api/chat` (request and response bodies).
+/// One chat message in the app's canonical chat+tools model.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ChatMessage {
     pub role: String,
@@ -16,6 +16,15 @@ pub struct ChatMessage {
 }
 
 impl ChatMessage {
+    pub fn system(content: impl Into<String>) -> Self {
+        Self {
+            role: "system".into(),
+            content: content.into(),
+            tool_calls: None,
+            tool_name: None,
+        }
+    }
+
     pub fn user(content: impl Into<String>) -> Self {
         Self {
             role: "user".into(),
@@ -68,7 +77,7 @@ where
     }
 }
 
-/// Tool definition for the `tools` parameter on `/api/chat`.
+/// Tool definition in the app's canonical tool schema.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ToolDefinition {
     #[serde(rename = "type")]
@@ -85,10 +94,13 @@ pub struct ToolFunctionDef {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct OllamaAgentResult {
+pub struct AgentChatResult {
     pub messages: Vec<ChatMessage>,
     pub assistant_reply: String,
     pub steps_used: u32,
+    /// Human-readable lines for debugging tool usage (also logged with `log` in the agent loop).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub debug_trace: Vec<String>,
 }
 
 #[cfg(test)]

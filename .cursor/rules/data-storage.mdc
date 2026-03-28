@@ -1,0 +1,29 @@
+---
+description: "Persistence is undecided — keep storage swappable (ports, no scattered paths)"
+globs: src-tauri/src/**/*.rs,src/**/*.ts,src/**/*.svelte
+alwaysApply: false
+---
+
+# Data storage and persistence
+
+**Where user data ultimately lives** (filesystem layout only, cloud sync, DB, etc.) is **not fixed yet**. Treat the current layout (e.g. markdown under the app data directory) as **one adapter implementation**, not the permanent architecture.
+
+## Principles
+
+- **Separation**: Keep **domain types and behavior** (`src-tauri/src/domain/`, stable IDs and entity shapes) separate from **how bytes are read or written**. Commands and tools should depend on **small, explicit boundaries** (functions or traits) rather than duplicating `Path` construction or `fs::*` across the codebase.
+- **Single place per concern**: Path helpers, directory creation, and format-specific read/write should live in **one obvious module** per storage backend so a future move (different root, SQLite, remote API) replaces **one area** instead of many call sites.
+- **Frontend**: The UI must **not** assume on-disk paths. Use **Tauri `invoke`** and typed results only; all path and I/O decisions stay in Rust.
+- **Comments**: When touching persistence, it is fine to note that the backing store may change; avoid wording that implies the current path or format is final.
+
+## What not to do
+
+- Spreading `app.path().app_data_dir()` (or similar) and raw file operations across unrelated modules “just because it’s local for now.”
+- Encoding storage details into **domain** types (e.g. file paths as the primary identity instead of stable logical IDs).
+- Adding features that **hard-code** sync, backup, or multi-device semantics before there is a real storage/sync design.
+
+## References
+
+- **@** `AGENTS.md` — English for source, comments, and user-facing strings.
+- **@** `src-tauri/src/domain/` — kind-agnostic identity and search result shapes.
+- **@** `src-tauri/src/commands/pages.rs` — current file-backed pages (treat as one persistence adapter until refactored).
+- [Cursor Rules — project rules](https://cursor.com/docs/rules)

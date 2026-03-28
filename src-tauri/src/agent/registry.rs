@@ -5,8 +5,10 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use serde_json::{json, Value};
+use tauri::AppHandle;
 
 use crate::agent::types::ToolDefinition;
+use crate::commands::pages::search_pages;
 
 #[async_trait]
 pub trait ToolHandler: Send + Sync {
@@ -26,9 +28,11 @@ impl ToolRegistry {
         }
     }
 
-    pub fn with_builtin_tools() -> Self {
+    /// All built-in tools, including page search (requires app data paths).
+    pub fn with_builtin_tools(app: AppHandle) -> Self {
         let mut r = Self::new();
         r.register(Arc::new(EchoTool));
+        r.register(Arc::new(SearchPagesTool(app)));
         r
     }
 
@@ -60,9 +64,13 @@ impl ToolRegistry {
     }
 }
 
-impl Default for ToolRegistry {
-    fn default() -> Self {
-        Self::with_builtin_tools()
+#[cfg(test)]
+impl ToolRegistry {
+    /// Echo only (unit tests that do not have a Tauri [`AppHandle`]).
+    pub(crate) fn with_echo_only() -> Self {
+        let mut r = Self::new();
+        r.register(Arc::new(EchoTool));
+        r
     }
 }
 
@@ -101,13 +109,59 @@ impl ToolHandler for EchoTool {
     }
 }
 
+/// Search local markdown pages (same behavior as the `pages_search` command).
+struct SearchPagesTool(AppHandle);
+
+#[async_trait]
+impl ToolHandler for SearchPagesTool {
+    fn definition(&self) -> ToolDefinition {
+        ToolDefinition {
+            typ: "function".into(),
+            function: crate::agent::types::ToolFunctionDef {
+                name: "search_pages".into(),
+                description: "Search the user's LOCAL markdown pages only (no web search in this app). Use for any request to find, search, or look up text in the user's notes. Whitespace separates terms; every term must appear in the title or body (case-insensitive). Returns a JSON array of hits: { entity: { kind, id }, title, snippet? }. Do not use any other tool name for search."
+                    .into(),
+                parameters: json!({
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Search terms (space-separated, AND semantics)."
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum number of results (default 15, max 50)."
+                        }
+                    },
+                    "required": ["query"]
+                }),
+            },
+        }
+    }
+
+    async fn invoke(&self, arguments: &Value) -> Result<String, String> {
+        let query = arguments
+            .get("query")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "missing query".to_string())?;
+        let limit = arguments
+            .get("limit")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(15)
+            .min(50)
+            .max(1) as usize;
+        let hits = search_pages(&self.0, query, limit)?;
+        serde_json::to_string(&hits).map_err(|e| e.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[tokio::test]
     async fn echo_invokes() {
-        let r = ToolRegistry::with_builtin_tools();
+        let r = ToolRegistry::with_echo_only();
         let out = r
             .invoke("echo", &json!({ "message": "hello" }))
             .await
@@ -117,7 +171,7 @@ mod tests {
 
     #[test]
     fn definitions_include_echo() {
-        let r = ToolRegistry::with_builtin_tools();
+        let r = ToolRegistry::with_echo_only();
         let defs = r.definitions();
         assert!(defs.iter().any(|d| d.function.name == "echo"));
     }
