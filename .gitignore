@@ -30,3 +30,7 @@ dist-ssr
 
 *storybook.log
 storybook-static
+
+# Tauri WebDriver (downloaded by npm run e2e:tauri:install-driver)
+e2e-tauri/.webdrivers/*
+!e2e-tauri/.webdrivers/.gitkeep

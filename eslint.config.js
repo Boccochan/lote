@@ -24,6 +24,21 @@ const maxLinesPerFunctionJsx = {
 
 export default defineConfig(
   {
+    files: ['e2e-tauri/**/*.js', 'e2e-tauri/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.mocha,
+        browser: true,
+        $: true,
+        $$: true,
+      },
+    },
+    rules: {
+      'max-lines-per-function': 'off',
+    },
+  },
+  {
     ignores: [
       'dist/**',
       'node_modules/**',

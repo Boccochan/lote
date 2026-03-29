@@ -66,7 +66,9 @@ If the change affects user-visible UI (components, styles, layouts, copy in the 
    - **Recommended**: Add images under `docs/pr-assets/<topic-or-branch>/` on the PR branch, commit, push, then reference them in the PR body using the GitHub **raw** URL for that branch, e.g. `https://github.com/<owner>/<repo>/raw/<branch>/docs/pr-assets/.../after.png`.
    - Alternatively, upload screenshots or video via the GitHub PR web UI (drag-and-drop into the description).
 
-If the project has Playwright or Storybook visual checks, prefer those for consistent captures when applicable.
+For **Tauri desktop** UI, run `npm run e2e:tauri:capture` from the repo root. Prerequisites: `cargo install tauri-driver --locked`. On **Windows**, the script downloads Edge WebDriver into `e2e-tauri/.webdrivers/` when needed; override with `MSEDGEDRIVER_PATH` if you install it yourself. The flow rebuilds a **debug** desktop binary (same WebView as production, not `tauri dev` hot reload), drives the UI, writes PNGs under `docs/pr-assets/tauri-desktop/`, and builds `capture-timeline.mp4` when `ffmpeg` is on `PATH`.
+
+If the project has Playwright or Storybook visual checks, prefer those for consistent captures when applicable for **web-only** flows.
 
 ### 5. Create or update the PR
 

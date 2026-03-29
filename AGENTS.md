@@ -23,3 +23,7 @@ High-level rules for design and quality (linting covers style and many correctne
 ## ESLint
 
 Follow the project ESLint configuration in `eslint.config.js`. Changes should pass `npm run lint` with no errors.
+
+## Tauri desktop capture (PR assets)
+
+Automated WebView screenshots/video: `npm run e2e:tauri:capture` (needs `cargo install tauri-driver --locked`; Windows downloads Edge WebDriver on first run). Outputs under `docs/pr-assets/tauri-desktop/`.
