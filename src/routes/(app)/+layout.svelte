@@ -9,8 +9,6 @@
     newPage,
     openPage,
     parseSearchHitsFromTool,
-    refreshMcpTools,
-    runMcpTool,
     runPageSearch,
     sendChat,
   } from '$lib/lote-app.svelte'
@@ -21,7 +19,6 @@
   import ErrorBanner from '../../components/error-banner'
   import JsonPre from '../../components/json-pre'
   import PanelTitle from '../../components/panel-title'
-  import TextArea from '../../components/text-area'
   import TextField from '../../components/text-field'
   import TypingDots from '../../components/typing-dots'
 
@@ -131,9 +128,9 @@
       {@render children()}
     </main>
 
-    <!-- Right: AI + MCP -->
+    <!-- Right: Ollama / AI chat (full column height) -->
     <aside class="flex min-h-0 flex-col border-l border-zinc-200 bg-zinc-50/50">
-      <section class="flex min-h-0 flex-1 flex-col border-b border-zinc-200 p-3">
+      <section class="flex min-h-0 flex-1 flex-col p-3">
         <PanelTitle>Ollama</PanelTitle>
         <TextField
           class="mb-2 w-full text-xs"
@@ -218,44 +215,6 @@
           />
           <ActionButton disabled={lote.chatBusy} onclick={() => void sendChat()}>Send</ActionButton>
         </div>
-      </section>
-
-      <section class="flex max-h-[45%] min-h-0 flex-col p-3">
-        <PanelTitle>MCP client</PanelTitle>
-        <TextField
-          class="mb-2 w-full text-xs"
-          placeholder="MCP HTTP endpoint (JSON-RPC POST)"
-          bind:value={lote.mcpEndpoint}
-        />
-        <div class="mb-2 flex gap-1">
-          <ActionButton onclick={() => void refreshMcpTools()}>List tools</ActionButton>
-        </div>
-        <JsonPre
-          class="mb-2 max-h-24 min-h-0 p-2 text-[10px] text-zinc-600"
-          text={lote.mcpToolsRaw}
-        />
-        <TextField
-          class="mb-1 w-full text-xs"
-          placeholder="tool name"
-          bind:value={lote.mcpToolName}
-        />
-        <TextArea
-          class="mb-2 min-h-[52px] w-full px-2 py-1 font-mono text-[10px]"
-          placeholder="JSON object for arguments"
-          bind:value={lote.mcpToolArgs}
-        />
-        <ActionButton class="mb-2" onclick={() => void runMcpTool()}>Call tool</ActionButton>
-        <JsonPre
-          class="min-h-0 flex-1 p-2 text-[10px] text-zinc-700"
-          text={lote.mcpResult}
-        />
-      </section>
-
-      <section class="border-t border-zinc-200 p-3">
-        <PanelTitle tone="muted" class="!mb-1">MCP server (stub)</PanelTitle>
-        <p class="text-[10px] leading-snug text-zinc-500">
-          Exposing this app as an MCP server for cloud AIs is not implemented in this MVP.
-        </p>
       </section>
     </aside>
   </div>
