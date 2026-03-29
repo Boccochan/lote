@@ -247,7 +247,7 @@
   })
 </script>
 
-<div class="flex h-full min-h-0 flex-col bg-white text-zinc-900">
+<div class="flex h-full min-h-0 flex-col bg-white text-zinc-900" data-testid="lote-app">
   <AppHeader
     title="Lote"
     subtitle="Local notes · Ollama · MCP (Tauri + Svelte, no Next.js)"
@@ -259,7 +259,7 @@
     <!-- Sidebar -->
     <aside class="flex min-h-0 flex-col border-r border-zinc-200 bg-zinc-50/80">
       <div class="flex gap-1 border-b border-zinc-200 p-2">
-        <ActionButton onclick={() => newPage(true)}>+ Page</ActionButton>
+        <ActionButton dataTestId="btn-new-root-page" onclick={() => newPage(true)}>+ Page</ActionButton>
         <ActionButton disabled={!selectedId} onclick={() => newPage(false)}>+ Child</ActionButton>
       </div>
       <div class="border-b border-zinc-200 p-2">
@@ -319,6 +319,7 @@
       <div class="flex items-center gap-2 border-b border-zinc-200 px-3 py-2">
         <TextField
           class="min-w-0 flex-1"
+          dataTestId="editor-title"
           placeholder="Title"
           bind:value={title}
         />

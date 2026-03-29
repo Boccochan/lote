@@ -58,15 +58,20 @@ Do not paste secrets, tokens, or contents of `.env` files into the title or body
 
 ### 4. UI / visual changes
 
+Skip this section entirely for **non-UI** PRs (docs-only, tooling, refactors with no visible change).
+
 If the change affects user-visible UI (components, styles, layouts, copy in the app):
 
-1. **Screenshots**: Capture the **same screens** before and after (or document “before” from the base branch if only “after” exists on the feature branch). Prefer pairing: same viewport and flow.
-2. **Video**: Record a **short** clip (roughly 10–60 seconds) showing the main interaction or regression area. Mention in the PR what the viewer should notice.
-3. **Attaching media**
-   - **Recommended**: Add images under `docs/pr-assets/<topic-or-branch>/` on the PR branch, commit, push, then reference them in the PR body using the GitHub **raw** URL for that branch, e.g. `https://github.com/<owner>/<repo>/raw/<branch>/docs/pr-assets/.../after.png`.
-   - Alternatively, upload screenshots or video via the GitHub PR web UI (drag-and-drop into the description).
+1. **Screenshots**: Prefer the **Screenshots (auto-uploaded)** block from `e2e:tauri:capture:publish` (see below). Add explicit **before / after** pairs only when a comparison helps reviewers; same viewport and flow when you do.
+2. **Video**: Optional. If you record a short clip (roughly 10–60 seconds), say what the viewer should notice; otherwise omit.
+3. **Attaching media (avoid committing binaries to git)**
+   - **This repo (Tauri desktop):** After the PR exists, run **`npm run e2e:tauri:capture:publish`** from the repository root on the **author’s machine** (the agent must execute this command when opening/updating a PR for UI changes). That rebuilds a debug app, captures PNGs, uploads them to a **public GitHub Gist** via `gh`, and **appends** image markdown to the PR body (markers `<!-- pr-auto-media:begin/end -->`). Requires `gh auth`, `cargo install tauri-driver --locked`, and (on Windows) the script can download Edge WebDriver into `e2e-tauri/.webdrivers/`. **Order:** create/push the PR first, then run publish — `attach-pr-media` needs a PR number.
+   - **Alternative**: Upload via the GitHub PR web UI (drag-and-drop; not in the repo).
+   - **Avoid** committing screenshots to the branch for display — it bloats **git history**.
 
-If the project has Playwright or Storybook visual checks, prefer those for consistent captures when applicable.
+The capture step rebuilds a **debug** desktop binary (same WebView as production, not `tauri dev` hot reload), writes under `docs/pr-assets/tauri-desktop/` (gitignored), and may build `capture-timeline.mp4` if `ffmpeg` is on `PATH`.
+
+If the project has Playwright or Storybook visual checks, prefer those for consistent captures when applicable for **web-only** flows.
 
 ### 5. Create or update the PR
 
@@ -87,6 +92,8 @@ If a PR for this branch already exists:
 gh pr view
 gh pr edit --title "..." --body-file pr-body.md
 ```
+
+**Tauri desktop UI changes:** After `gh pr create` (or once the PR exists and the branch is pushed), **run** `npm run e2e:tauri:capture:publish` from the repo root so the PR description gets screenshots without committing images. Do not rely on GitHub Actions unless the repository adds a workflow.
 
 ## Security and scope
 

@@ -18,7 +18,11 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "e2e:tauri:install-driver": "node e2e-tauri/scripts/install-msedgedriver.mjs",
+    "e2e:tauri:capture": "npm run e2e:tauri:install-driver && wdio run e2e-tauri/wdio.conf.js && node e2e-tauri/scripts/stitch-captures.mjs",
+    "pr:attach-captures": "node e2e-tauri/scripts/attach-pr-media.mjs",
+    "e2e:tauri:capture:publish": "npm run e2e:tauri:capture && npm run pr:attach-captures"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -35,6 +39,10 @@
     "@types/node": "^24.12.0",
     "@vitest/browser-playwright": "^4.1.0",
     "@vitest/coverage-v8": "^4.1.0",
+    "@wdio/cli": "^9.19.0",
+    "@wdio/local-runner": "^9.19.0",
+    "@wdio/mocha-framework": "^9.19.0",
+    "@wdio/spec-reporter": "^9.19.0",
     "eslint": "^10.1.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-storybook": "^10.3.1",

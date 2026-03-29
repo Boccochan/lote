@@ -8,6 +8,7 @@
     disabled = false,
     type = 'button',
     class: className = '',
+    dataTestId = undefined,
     children,
     onclick,
   }: {
@@ -15,6 +16,8 @@
     disabled?: boolean
     type?: 'button' | 'submit' | 'reset'
     class?: string
+    /** Stable hook for desktop WebDriver / E2E. */
+    dataTestId?: string
     children: Snippet
     onclick?: (e: MouseEvent) => void
   } = $props()
@@ -28,6 +31,12 @@
   )
 </script>
 
-<button {type} class="{base} {className}" {disabled} {onclick}>
+<button
+  {type}
+  class="{base} {className}"
+  data-testid={dataTestId}
+  {disabled}
+  {onclick}
+>
   {@render children()}
 </button>
