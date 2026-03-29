@@ -3,7 +3,9 @@
 use crate::agent::client::{AssistantTurn, ChatCompletionClient};
 use crate::agent::error::AgentError;
 use crate::agent::registry::ToolRegistry;
-use crate::agent::types::{AgentChatResult, ChatMessage, ToolCall, ToolCallFunction};
+use crate::agent::types::{
+    is_proposal_tool_name, AgentChatResult, ChatMessage, PageProposal, ToolCall, ToolCallFunction,
+};
 use serde_json::Value;
 
 /// When the model prints tool JSON in a markdown fence instead of using native `tool_calls`, parse and run it if the name is registered.
@@ -134,6 +136,7 @@ pub async fn run_agent_loop(
                 assistant_reply: content,
                 steps_used,
                 debug_trace,
+                pending_proposal: None,
             });
         }
 
@@ -153,9 +156,11 @@ pub async fn run_agent_loop(
         };
 
         messages.push(ChatMessage::assistant(
-            assistant_content,
+            assistant_content.clone(),
             Some(tool_calls.clone()),
         ));
+
+        let mut pending_proposal: Option<PageProposal> = None;
 
         for tc in tool_calls {
             let name = tc.function.name.as_str();
@@ -185,7 +190,27 @@ pub async fn run_agent_loop(
                     ellipsize_chars(result.trim(), 400)
                 ),
             );
+            if is_proposal_tool_name(name) {
+                let proposal: PageProposal = serde_json::from_str(&result).map_err(|e| {
+                    AgentError::Provider(format!("proposal tool returned invalid JSON: {e}"))
+                })?;
+                pending_proposal = Some(proposal);
+            }
             messages.push(ChatMessage::tool(name, result));
+        }
+
+        if let Some(proposal) = pending_proposal {
+            push_trace(
+                &mut debug_trace,
+                "proposal tool used: stopping agent loop until user confirms in UI".into(),
+            );
+            return Ok(AgentChatResult {
+                messages,
+                assistant_reply: assistant_content,
+                steps_used,
+                debug_trace,
+                pending_proposal: Some(proposal),
+            });
         }
     }
 }
@@ -246,15 +271,9 @@ mod tests {
             },
         ]);
         let reg = ToolRegistry::with_echo_only();
-        let out = run_agent_loop(
-            &client,
-            "m",
-            vec![ChatMessage::user("hi")],
-            &reg,
-            8,
-        )
-        .await
-        .unwrap();
+        let out = run_agent_loop(&client, "m", vec![ChatMessage::user("hi")], &reg, 8)
+            .await
+            .unwrap();
 
         assert_eq!(out.assistant_reply, "done");
         assert_eq!(out.steps_used, 2);
@@ -274,15 +293,9 @@ mod tests {
             }],
         }]);
         let reg = ToolRegistry::with_echo_only();
-        let err = run_agent_loop(
-            &client,
-            "m",
-            vec![ChatMessage::user("hi")],
-            &reg,
-            1,
-        )
-        .await
-        .unwrap_err();
+        let err = run_agent_loop(&client, "m", vec![ChatMessage::user("hi")], &reg, 1)
+            .await
+            .unwrap_err();
         assert!(matches!(err, AgentError::MaxSteps { limit: 1 }));
     }
 
@@ -298,15 +311,9 @@ mod tests {
             }],
         }]);
         let reg = ToolRegistry::with_echo_only();
-        let err = run_agent_loop(
-            &client,
-            "m",
-            vec![ChatMessage::user("hi")],
-            &reg,
-            8,
-        )
-        .await
-        .unwrap_err();
+        let err = run_agent_loop(&client, "m", vec![ChatMessage::user("hi")], &reg, 8)
+            .await
+            .unwrap_err();
         assert!(matches!(err, AgentError::UnknownTool(_)));
     }
 
@@ -337,15 +344,9 @@ mod tests {
             },
         ]);
         let reg = ToolRegistry::with_echo_only();
-        let out = run_agent_loop(
-            &client,
-            "m",
-            vec![ChatMessage::user("hi")],
-            &reg,
-            8,
-        )
-        .await
-        .unwrap();
+        let out = run_agent_loop(&client, "m", vec![ChatMessage::user("hi")], &reg, 8)
+            .await
+            .unwrap();
 
         assert_eq!(out.assistant_reply, "done");
         assert!(out.messages.iter().any(|m| m.role == "tool"));
@@ -355,5 +356,35 @@ mod tests {
     #[test]
     fn reqwest_client_default() {
         let _ = ReqwestOllamaClient::default();
+    }
+
+    #[tokio::test]
+    async fn loop_stops_after_propose_tool_without_second_model_turn() {
+        let client = ScriptedClient::new(vec![AssistantTurn {
+            content: "I will delete that page.".into(),
+            tool_calls: vec![ToolCall {
+                function: ToolCallFunction {
+                    name: "propose_page_delete".into(),
+                    arguments: json!({ "page_id": "pid-1", "title": "Note A" }),
+                },
+            }],
+        }]);
+        let reg = ToolRegistry::with_propose_delete_only();
+        let out = run_agent_loop(
+            &client,
+            "m",
+            vec![ChatMessage::user("delete my page")],
+            &reg,
+            8,
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(out.steps_used, 1);
+        let prop = out.pending_proposal.expect("pending proposal");
+        assert_eq!(prop.op, "delete");
+        assert_eq!(prop.page_id.as_deref(), Some("pid-1"));
+        assert_eq!(out.assistant_reply, "I will delete that page.");
+        assert_eq!(out.messages.last().unwrap().role, "tool");
     }
 }

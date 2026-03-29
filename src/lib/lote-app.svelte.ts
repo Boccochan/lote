@@ -12,11 +12,22 @@ export type AgentChatMessage = {
   tool_name?: string
 }
 
+/** Matches Rust `PageProposal` (camelCase). */
+export type PageProposal = {
+  op: 'create' | 'save' | 'delete'
+  pageId?: string
+  title?: string
+  /** Absent vs null: treat absent as undefined; empty string means root when saving. */
+  parentId?: string | null
+  body?: string
+}
+
 type AgentChatResult = {
   messages: AgentChatMessage[]
   assistantReply: string
   stepsUsed: number
   debugTrace?: string[]
+  pendingProposal?: PageProposal | null
 }
 
 export const lote = $state({
@@ -33,6 +44,8 @@ export const lote = $state({
   chatInput: '',
   chatMessages: [] as AgentChatMessage[],
   chatBusy: false,
+  /** Set when the model used a `propose_page_*` tool; cleared on confirm, dismiss, or new chat message. */
+  pendingProposal: null as PageProposal | null,
   showAgentDebug: false,
   agentDebugTrace: [] as string[],
 
@@ -59,6 +72,43 @@ export async function loadPages() {
     }
   } catch (e) {
     lote.err = String(e)
+  }
+}
+
+/** Parses JSON from a `propose_page_*` tool result (same shape as `PageProposal`). */
+/** Short label for the confirmation banner (English, user-facing). */
+export function formatPageProposalLabel(p: PageProposal): string {
+  if (p.op === 'create') {
+    return `Create page "${(p.title ?? 'Untitled').trim() || 'Untitled'}"`
+  }
+  if (p.op === 'save') {
+    return `Update page ${p.pageId ?? '(unknown id)'}`
+  }
+  return `Delete "${(p.title ?? p.pageId ?? 'page').trim() || 'page'}"`
+}
+
+export function parsePageProposalFromTool(content: string | undefined): PageProposal | null {
+  if (!content?.trim()) return null
+  try {
+    const v = JSON.parse(content) as Record<string, unknown>
+    if (!v || typeof v !== 'object') return null
+    const op = v.op
+    if (op !== 'create' && op !== 'save' && op !== 'delete') return null
+    const parentId = v.parentId
+    let normalizedParent: string | null | undefined
+    if (parentId === undefined) normalizedParent = undefined
+    else if (parentId === null) normalizedParent = null
+    else if (typeof parentId === 'string') normalizedParent = parentId
+    else return null
+    return {
+      op,
+      pageId: typeof v.pageId === 'string' ? v.pageId : undefined,
+      title: typeof v.title === 'string' ? v.title : undefined,
+      parentId: normalizedParent,
+      body: typeof v.body === 'string' ? v.body : undefined,
+    }
+  } catch {
+    return null
   }
 }
 
@@ -168,11 +218,77 @@ export async function deletePage() {
   }
 }
 
+export function dismissPendingProposal() {
+  lote.pendingProposal = null
+}
+
+export async function confirmPendingProposal() {
+  const p = lote.pendingProposal
+  if (!p || lote.chatBusy) return
+  lote.chatBusy = true
+  lote.err = ''
+  try {
+    if (p.op === 'create') {
+      const meta = await invoke<PageMeta>('pages_create', {
+        title: p.title?.trim() || 'Untitled',
+        parentId: p.parentId && p.parentId !== '' ? p.parentId : null,
+      })
+      lote.pendingProposal = null
+      await loadPages()
+      await openPage(meta.id)
+      return
+    }
+    if (p.op === 'save') {
+      const id = p.pageId
+      if (!id) {
+        lote.err = 'Proposal is missing page id'
+        return
+      }
+      await invoke('pages_save', {
+        id,
+        title: p.title ?? '',
+        parentId: p.parentId && p.parentId !== '' ? p.parentId : null,
+        body: p.body ?? '',
+      })
+      lote.pendingProposal = null
+      await loadPages()
+      if (lote.selectedId === id) {
+        const d = await invoke<PageDetail>('pages_get', { id })
+        lote.title = d.meta.title
+        lote.body = d.body
+        lote.parentSelect = d.meta.parent_id ?? ''
+      }
+      return
+    }
+    if (p.op === 'delete') {
+      const id = p.pageId
+      if (!id) {
+        lote.err = 'Proposal is missing page id'
+        return
+      }
+      await invoke('pages_delete', { id })
+      lote.pendingProposal = null
+      if (lote.selectedId === id) {
+        lote.selectedId = null
+        lote.title = ''
+        lote.body = ''
+        lote.parentSelect = ''
+      }
+      await loadPages()
+    }
+  } catch (e) {
+    lote.err = String(e)
+  } finally {
+    lote.chatBusy = false
+  }
+}
+
 export async function sendChat() {
   const msg = lote.chatInput.trim()
   if (!msg || lote.chatBusy) return
   lote.chatBusy = true
   lote.err = ''
+  lote.pendingProposal = null
   const messages: AgentChatMessage[] = [...lote.chatMessages, { role: 'user', content: msg }]
   lote.chatMessages = messages
   lote.chatInput = ''
@@ -184,6 +300,9 @@ export async function sendChat() {
     })
     lote.chatMessages = (result.messages ?? []).filter((m) => m.role !== 'system')
     lote.agentDebugTrace = result.debugTrace ?? []
+    const pending = result.pendingProposal
+    lote.pendingProposal =
+      pending && typeof pending === 'object' && 'op' in pending ? pending : null
   } catch (e) {
     lote.err = String(e)
     lote.agentDebugTrace = []
