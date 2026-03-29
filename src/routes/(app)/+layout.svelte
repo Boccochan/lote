@@ -14,6 +14,7 @@
     parsePageProposalFromTool,
     parseSearchHitsFromTool,
     runPageSearch,
+    seedE2eAgentProposalDemo,
     sendChat,
   } from '$lib/lote-app.svelte'
   import * as pageTree from '$lib/pages-helpers'
@@ -33,6 +34,12 @@
 
   $effect(() => {
     void loadPages()
+  })
+
+  $effect(() => {
+    if (import.meta.env.VITE_E2E_CAPTURE === 'true') {
+      globalThis.__loteSeedAgentDemo = seedE2eAgentProposalDemo
+    }
   })
 </script>
 
@@ -232,10 +239,15 @@
               This action runs only if you confirm. Cancel leaves your notes unchanged.
             </p>
             <div class="mt-2 flex justify-end gap-1">
-              <ActionButton disabled={lote.chatBusy} onclick={() => dismissPendingProposal()}>
+              <ActionButton
+                dataTestId="chat-proposal-cancel"
+                disabled={lote.chatBusy}
+                onclick={() => dismissPendingProposal()}
+              >
                 Cancel
               </ActionButton>
               <ActionButton
+                dataTestId="chat-proposal-confirm"
                 disabled={lote.chatBusy}
                 onclick={() => void confirmPendingProposal()}
               >
@@ -247,12 +259,15 @@
         <div class="mt-2 flex gap-1">
           <TextField
             class="min-w-0 flex-1 text-xs"
+            dataTestId="chat-input"
             placeholder="Message…"
             bind:value={lote.chatInput}
             onkeydown={(e) =>
               e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), void sendChat())}
           />
-          <ActionButton disabled={lote.chatBusy} onclick={() => void sendChat()}>Send</ActionButton>
+          <ActionButton dataTestId="chat-send" disabled={lote.chatBusy} onclick={() => void sendChat()}>
+            Send
+          </ActionButton>
         </div>
       </section>
     </aside>

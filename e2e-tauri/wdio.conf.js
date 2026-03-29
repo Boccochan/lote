@@ -73,10 +73,16 @@ export const config = {
   onPrepare: () => {
     const outDir = path.join(root, 'docs', 'pr-assets', 'tauri-desktop')
     fs.mkdirSync(outDir, { recursive: true })
+    for (const name of fs.readdirSync(outDir)) {
+      if (name.endsWith('.png')) {
+        fs.unlinkSync(path.join(outDir, name))
+      }
+    }
     const build = spawnSync('npm', ['run', 'tauri', 'build', '--', '--debug', '--no-bundle'], {
       cwd: root,
       stdio: 'inherit',
       shell: true,
+      env: { ...process.env, VITE_E2E_CAPTURE: 'true' },
     })
     if (build.status !== 0) {
       process.exit(build.status ?? 1)

@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core'
 
 import { goto } from '$app/navigation'
 import { resolve } from '$app/paths'
+import { buildE2eAgentDemo } from '$lib/lote-app-e2e-seed'
 import type { PageDetail, PageMeta, SearchHit } from '$lib/types'
 
 /** Matches Rust `ChatMessage` / Ollama JSON (snake_case fields). */
@@ -75,7 +76,6 @@ export async function loadPages() {
   }
 }
 
-/** Parses JSON from a `propose_page_*` tool result (same shape as `PageProposal`). */
 /** Short label for the confirmation banner (English, user-facing). */
 export function formatPageProposalLabel(p: PageProposal): string {
   if (p.op === 'create') {
@@ -216,6 +216,24 @@ export async function deletePage() {
   } catch (e) {
     lote.err = String(e)
   }
+}
+
+/**
+ * Populates chat + pending proposal to mimic an agent turn (desktop capture / PR screenshots only).
+ * No-op unless the app was built with `VITE_E2E_CAPTURE=true`.
+ */
+export function seedE2eAgentProposalDemo(scenario: 'create' | 'save' | 'delete'): void {
+  if (import.meta.env.VITE_E2E_CAPTURE !== 'true') {
+    return
+  }
+  lote.chatBusy = false
+  const pack = buildE2eAgentDemo(scenario, lote.selectedId, lote.title)
+  if (!pack) {
+    lote.pendingProposal = null
+    return
+  }
+  lote.chatMessages = pack.messages as AgentChatMessage[]
+  lote.pendingProposal = pack.proposal
 }
 
 export function dismissPendingProposal() {
