@@ -96,8 +96,8 @@ npm run lint:rust
 
 Only after step 5 succeeds:
 
-1. For **Tauri desktop UI** changes, run `npm run e2e:tauri:capture` so `docs/pr-assets/tauri-desktop/` has fresh PNGs (and `capture-timeline.mp4` if `ffmpeg` is installed); commit assets you want linked from the PR.
-2. Follow the project skill **`pr`** (`.cursor/skills/pr/SKILL.md`): `git fetch origin`, review `git log` / `git diff` against the base branch, fill `.cursor/skills/pr/references/PR_TEMPLATE.md`, then `gh pr create` or `gh pr edit`.
+1. Follow the project skill **`pr`** (`.cursor/skills/pr/SKILL.md`): `git fetch origin`, review `git log` / `git diff` against the base branch, fill `.cursor/skills/pr/references/PR_TEMPLATE.md`, push the branch, then `gh pr create` or `gh pr edit`.
+2. If the change affects **Tauri desktop UI**, **run locally** `npm run e2e:tauri:capture:publish` from the repo root **after** the PR exists (captures screenshots and appends them to the PR body via Gist; requires `gh auth` and `cargo install tauri-driver --locked`). The agent should execute this command, not only document it.
 3. Optional helper: `.\.cursor\skills\pr\scripts\generate-pr-summary.ps1 -BaseBranch <base>`
 4. PR title and body in **English** unless the repository explicitly uses another language for PRs (`AGENTS.md`).
 

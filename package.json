@@ -20,7 +20,9 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "e2e:tauri:install-driver": "node e2e-tauri/scripts/install-msedgedriver.mjs",
-    "e2e:tauri:capture": "npm run e2e:tauri:install-driver && wdio run e2e-tauri/wdio.conf.js && node e2e-tauri/scripts/stitch-captures.mjs"
+    "e2e:tauri:capture": "npm run e2e:tauri:install-driver && wdio run e2e-tauri/wdio.conf.js && node e2e-tauri/scripts/stitch-captures.mjs",
+    "pr:attach-captures": "node e2e-tauri/scripts/attach-pr-media.mjs",
+    "e2e:tauri:capture:publish": "npm run e2e:tauri:capture && npm run pr:attach-captures"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

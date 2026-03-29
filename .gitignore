@@ -34,3 +34,8 @@ storybook-static
 # Tauri WebDriver (downloaded by npm run e2e:tauri:install-driver)
 e2e-tauri/.webdrivers/*
 !e2e-tauri/.webdrivers/.gitkeep
+
+# Desktop capture frames (use npm run pr:attach-captures to embed via Gist in PR body)
+docs/pr-assets/tauri-desktop/*.png
+docs/pr-assets/tauri-desktop/*.mp4
+!docs/pr-assets/tauri-desktop/.gitkeep

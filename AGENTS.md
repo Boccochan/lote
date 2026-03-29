@@ -26,4 +26,6 @@ Follow the project ESLint configuration in `eslint.config.js`. Changes should pa
 
 ## Tauri desktop capture (PR assets)
 
-Automated WebView screenshots/video: `npm run e2e:tauri:capture` (needs `cargo install tauri-driver --locked`; Windows downloads Edge WebDriver on first run). Outputs under `docs/pr-assets/tauri-desktop/`.
+Automated WebView screenshots/video: `npm run e2e:tauri:capture` (needs `cargo install tauri-driver --locked`; Windows downloads Edge WebDriver on first run). Outputs under `docs/pr-assets/tauri-desktop/` (gitignored PNG/MP4 so they are not committed).
+
+To **put screenshots in the PR description without committing binaries**, use `gh auth` and an **open PR** for the branch, then run **`npm run e2e:tauri:capture:publish`** from the repo root (one command: capture + upload PNGs to a public Gist + append image markdown to the PR body). Or run `e2e:tauri:capture` then `pr:attach-captures` separately. **Agents opening a PR** should run `e2e:tauri:capture:publish` locally after `gh pr create` when the change affects the Tauri desktop UI.
