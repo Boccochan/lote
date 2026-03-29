@@ -32,7 +32,9 @@ To **put screenshots in the PR description without committing binaries**, use `g
 
 ### `data-testid` for capture (document here)
 
-If you add or change **`data-testid` / `dataTestId`** attributes **because** desktop E2E or PR screenshot automation needs stable selectors, **update this subsection in the same change** (or follow-up): add a row to the table and keep the list aligned with `e2e-tauri/specs/desktop-capture.e2e.js`. Prefer **`kebab-case`** values on the DOM (`data-testid="my-target"`). Reusable controls may expose `dataTestId` props (see `ActionButton`, `TextField`), which render as `data-testid` on the host element.
+**Requirement (PRs that touch capture):** If you add or change a **`data-testid`** (or a **`dataTestId`** prop that renders one) **because** desktop E2E or **`npm run e2e:tauri:capture*`** / PR screenshot automation needs a stable selector, you **must** update **this `AGENTS.md` subsection** (table + text) in the **same pull request** as the UI and `e2e-tauri/specs/` changes. Reviewers use this list to see what the capture flow depends on; merging selector-only code without the registry update is not OK.
+
+Prefer **`kebab-case`** values on the DOM (`data-testid="my-target"`). Reusable controls may expose `dataTestId` props (see `ActionButton`, `TextField`), which render as `data-testid` on the host element.
 
 | `data-testid` | Where used | Purpose |
 | --- | --- | --- |
