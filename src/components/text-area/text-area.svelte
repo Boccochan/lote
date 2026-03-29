@@ -10,6 +10,7 @@
     placeholder?: string
     plain?: boolean
     class?: string
+    /** Stable hook for desktop WebDriver / E2E. */
     dataTestId?: string
   } = $props()
 

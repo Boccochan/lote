@@ -56,15 +56,19 @@ To **put screenshots in the PR description without committing binaries**, use `g
 
 **Requirement (PRs that touch capture):** If you add or change a **`data-testid`** (or a **`dataTestId`** prop that renders one) **because** desktop E2E or **`npm run e2e:tauri:capture*`** / PR screenshot automation needs a stable selector, you **must** update **this `AGENTS.md` subsection** (table + text) in the **same pull request** as the UI and `e2e-tauri/specs/` changes. Reviewers use this list to see what the capture flow depends on; merging selector-only code without the registry update is not OK.
 
-Prefer **`kebab-case`** values on the DOM (`data-testid="my-target"`). Reusable controls may expose `dataTestId` props (see `ActionButton`, `TextField`), which render as `data-testid` on the host element.
+Prefer **`kebab-case`** values on the DOM (`data-testid="my-target"`). Reusable controls may expose `dataTestId` props (see `ActionButton`, `TextField`, `TextArea`), which render as `data-testid` on the host element.
 
 | `data-testid` | Where used | Purpose |
 | --- | --- | --- |
 | `lote-app` | Root shell in `src/routes/(app)/+layout.svelte` | Wait for app ready |
 | `btn-new-root-page` | “+ Page” in `src/routes/(app)/+layout.svelte` | Create root page in capture flow |
 | `editor-title` | Title field in `src/routes/(app)/+page.svelte` | Editor / title editing in capture flow |
-| `editor-body` | Body textarea in `src/routes/(app)/+page.svelte` (`TextArea`) | Seed long document before save-proposal capture |
+| `editor-body` | Body textarea in `src/routes/(app)/+page.svelte` (`TextArea`) | Markdown source; seed long document before save-proposal capture |
 | `editor-save` | Save button in `src/routes/(app)/+page.svelte` | Persist editor before save-proposal diff screenshot |
+| `editor-mode-toggle` | Edit/Preview control group below the title bar in `src/routes/(app)/+page.svelte` | Segmented editor mode toggle (right-aligned) |
+| `editor-mode-edit` | Edit segment in `src/routes/(app)/+page.svelte` | Switch to Markdown source editing |
+| `editor-mode-preview` | Preview segment in `src/routes/(app)/+page.svelte` | Switch to rendered Markdown preview |
+| `markdown-preview` | Preview region in `src/routes/(app)/+page.svelte` | Rendered Markdown output (sanitized HTML) |
 | `sidebar-settings` | Settings link in `src/routes/(app)/+layout.svelte` | Open `/settings` in capture flow (when present) |
 | `settings-view` | Settings panel in `src/routes/(app)/settings/+page.svelte` | Assert Settings view in capture flow (when present) |
 | `chat-input` | Chat message field in `src/routes/(app)/+layout.svelte` | Optional: chat input in capture flow |
