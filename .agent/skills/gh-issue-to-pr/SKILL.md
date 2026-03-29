@@ -1,0 +1,83 @@
+---
+name: gh-issue-to-pr
+description: >
+  Fetch a GitHub issue with gh, implement and add unit tests, run lint and typecheck
+  until clean (and Rust fmt/clippy when src-tauri changes), then open or update a PR
+  using the project pr skill. Use when the user gives an issue number or URL or asks to
+  implement an issue through to a pull request.
+compatibility: Requires gh CLI authenticated (gh auth status). Windows uses PowerShell.
+---
+
+# GitHub issue → implementation → PR
+
+## When to use
+
+- A GitHub issue number, URL, or explicit request to implement an issue and open a PR.
+- The user wants the full path: understand issue → code → tests → quality gate → PR.
+
+## Prerequisites
+
+- `gh` installed and logged in (`gh auth status`).
+- Prefer **PowerShell** on Windows for commands below.
+
+## Workflow
+
+### 1. Fetch and understand the issue
+
+```powershell
+gh issue view <N> --json number,title,body,state,labels,assignees,url
+```
+
+- If acceptance criteria are unclear, ask the user before coding.
+- Keep scope aligned with the issue; follow `AGENTS.md` (English for code and commits; PowerShell for shell examples).
+
+### 2. Implement
+
+- Match existing project patterns; keep changes minimal and focused on the issue.
+- If the change touches **Rust** under `src-tauri/`, include Rust formatting and clippy in the quality gate (step 4).
+
+### 3. Unit tests
+
+From the repository root:
+
+```powershell
+npm run test
+```
+
+- Add or update tests for new behavior. The project uses Vitest with the **unit** project (`vitest run --project=unit`).
+
+### 4. Lint, typecheck, and Rust (repeat until clean)
+
+**JavaScript / TypeScript / Svelte** (run for relevant changes; always before a PR):
+
+```powershell
+npm run lint
+npm run check
+```
+
+- Fix all reported issues and re-run until **no errors**. ESLint is required for changes per `AGENTS.md` (`npm run lint`).
+
+**Rust** (when `src-tauri/` or Rust sources change):
+
+```powershell
+npm run fmt:rust
+npm run lint:rust
+```
+
+- If the same failure persists after two fix attempts, stop and ask the user.
+
+### 5. Pull request
+
+Only after step 4 succeeds:
+
+1. Follow the project skill **`pr`** (`.agent/skills/pr/SKILL.md`): `git fetch origin`, review `git log` / `git diff` against the base branch, fill `.agent/skills/pr/references/PR_TEMPLATE.md`, then `gh pr create` or `gh pr edit`.
+2. Optional helper: `.\.agent\skills\pr\scripts\generate-pr-summary.ps1 -BaseBranch <base>`
+3. PR title and body in **English** unless the repository explicitly uses another language for PRs (`AGENTS.md`).
+
+## Security
+
+- Do not paste secrets, tokens, or `.env` contents into issues, commits, or PR text.
+
+## Further reading
+
+- Additional `gh issue` patterns and edge cases: `references/GH_ISSUE_WORKFLOW.md`.
