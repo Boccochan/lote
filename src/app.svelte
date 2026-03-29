@@ -1,4 +1,5 @@
 <script lang="ts">
+  import SvelteMarkdown from '@humanspeak/svelte-markdown'
   import { invoke } from '@tauri-apps/api/core'
 
   import ActionButton from './components/action-button'
@@ -58,6 +59,10 @@
   type MainView = 'editor' | 'settings'
   let mainView = $state<MainView>('editor')
 
+  /** Raw Markdown vs rendered preview for the page body. */
+  type BodyViewMode = 'edit' | 'preview'
+  let bodyViewMode = $state<BodyViewMode>('edit')
+
   async function loadPages() {
     err = ''
     try {
@@ -112,6 +117,7 @@
       title = d.meta.title
       body = d.body
       parentSelect = d.meta.parent_id ?? ''
+      bodyViewMode = 'edit'
     } catch (e) {
       err = String(e)
     }
@@ -388,12 +394,54 @@
             <span class="text-xs text-zinc-500">{status}</span>
           {/if}
         </div>
-        <TextArea
-          plain
-          class="min-h-0 flex-1 p-4 font-mono text-sm leading-relaxed text-zinc-800"
-          placeholder="Markdown…"
-          bind:value={body}
-        />
+        {#if selectedId}
+          <div class="flex shrink-0 justify-end border-b border-zinc-200 px-3 py-1.5">
+            <div
+              class="inline-flex rounded-md border border-zinc-300 bg-zinc-50/90 p-0.5"
+              role="group"
+              aria-label="Body view mode"
+            >
+              <button
+                type="button"
+                data-testid="editor-body-mode-edit"
+                class="rounded px-2.5 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 {bodyViewMode === 'edit'
+                  ? 'bg-white text-zinc-900 shadow-sm'
+                  : ''}"
+                onclick={() => {
+                  bodyViewMode = 'edit'
+                }}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                data-testid="editor-body-mode-preview"
+                class="rounded px-2.5 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 {bodyViewMode === 'preview'
+                  ? 'bg-white text-zinc-900 shadow-sm'
+                  : ''}"
+                onclick={() => {
+                  bodyViewMode = 'preview'
+                }}
+              >
+                Preview
+              </button>
+            </div>
+          </div>
+        {/if}
+        {#if bodyViewMode === 'preview' && selectedId}
+          <div
+            class="markdown-preview min-h-0 flex-1 overflow-y-auto bg-white px-4 py-4 text-sm leading-relaxed text-zinc-800 [&_a]:text-blue-700 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-zinc-300 [&_blockquote]:pl-3 [&_blockquote]:text-zinc-600 [&_code]:rounded [&_code]:bg-zinc-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.9em] [&_h1]:mb-3 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_li]:my-0.5 [&_ol]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-2 [&_pre]:mb-3 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-zinc-100 [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-[0.85em] [&_ul]:mb-2 [&_ul]:list-disc [&_ul]:pl-5"
+          >
+            <SvelteMarkdown source={body} />
+          </div>
+        {:else}
+          <TextArea
+            plain
+            class="min-h-0 flex-1 p-4 font-mono text-sm leading-relaxed text-zinc-800"
+            placeholder="Markdown…"
+            bind:value={body}
+          />
+        {/if}
       {/if}
     </main>
 
