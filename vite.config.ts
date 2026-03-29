@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { playwright } from '@vitest/browser-playwright'
 import { defineConfig } from 'vite'
@@ -15,7 +15,7 @@ const dirname =
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [tailwindcss(), svelte()],
+  plugins: [tailwindcss(), sveltekit()],
   clearScreen: false,
   resolve: {
     // Vitest otherwise resolves Svelte’s server build (`mount` unavailable).
@@ -23,6 +23,12 @@ export default defineConfig({
   },
   server: { port: 5173, strictPort: true },
   test: {
+    // Avoid ::1 bind failures on some Windows environments (Vitest browser API server).
+    browser: {
+      api: {
+        host: '127.0.0.1',
+      },
+    },
     projects: [
       {
         extends: true,

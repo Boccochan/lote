@@ -22,5 +22,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": [".storybook/**/*.ts", "vite.config.ts", "vitest.shims.d.ts"]
+  "include": [".storybook/**/*.ts", "svelte.config.js", "vite.config.ts", "vitest.shims.d.ts"]
 }

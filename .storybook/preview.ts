@@ -1,6 +1,6 @@
 import '../src/app.css'
 
-import type { Preview } from '@storybook/svelte-vite'
+import type { Preview } from '@storybook/sveltekit'
 
 const preview: Preview = {
   parameters: {

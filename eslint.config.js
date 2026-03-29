@@ -40,6 +40,7 @@ export default defineConfig(
   },
   {
     ignores: [
+      '.svelte-kit/**',
       'dist/**',
       'node_modules/**',
       'src-tauri/target/**',
