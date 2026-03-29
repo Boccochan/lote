@@ -109,6 +109,6 @@ Key touchpoints today:
 - `src-tauri/src/agent/types.rs` — chat/tool DTOs.
 - `src-tauri/src/agent/registry.rs` — tools.
 - `src-tauri/src/commands/ollama*.rs` — Tauri entrypoints.
-- `src/app.svelte` — `invoke` targets and chat types.
+- `src/routes/+page.svelte` — `invoke` targets and chat types.
 
 Update this document when phases complete or policy changes.

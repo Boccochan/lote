@@ -1,15 +1,16 @@
 <script lang="ts">
   import { invoke } from '@tauri-apps/api/core'
 
-  import ActionButton from './components/action-button'
-  import AppHeader from './components/app-header'
-  import ErrorBanner from './components/error-banner'
-  import JsonPre from './components/json-pre'
-  import PanelTitle from './components/panel-title'
-  import TextArea from './components/text-area'
-  import TextField from './components/text-field'
-  import * as pageTree from './lib/pages-helpers'
-  import type { PageDetail, PageMeta, SearchHit } from './lib/types'
+  import * as pageTree from '$lib/pages-helpers'
+  import type { PageDetail, PageMeta, SearchHit } from '$lib/types'
+
+  import ActionButton from '../components/action-button'
+  import AppHeader from '../components/app-header'
+  import ErrorBanner from '../components/error-banner'
+  import JsonPre from '../components/json-pre'
+  import PanelTitle from '../components/panel-title'
+  import TextArea from '../components/text-area'
+  import TextField from '../components/text-field'
 
   /** Matches Rust `ChatMessage` / Ollama JSON (snake_case fields). */
   type AgentChatMessage = {
@@ -70,11 +71,6 @@
     } catch (e) {
       err = String(e)
     }
-  }
-
-  /** Fragment used for in-app page links (open in editor on click). */
-  function pageHref(id: string): string {
-    return `#page/${encodeURIComponent(id)}`
   }
 
   function parseSearchHitsFromTool(content: string | undefined): SearchHit[] | null {
@@ -287,16 +283,13 @@
           <ul class="mt-1 max-h-40 list-none space-y-2 overflow-y-auto pl-0">
             {#each searchHits as h (h.entity.id)}
               <li>
-                <a
-                  href={pageHref(h.entity.id)}
-                  class="block text-sm font-medium text-sky-700 underline decoration-sky-600/50 underline-offset-2 hover:text-sky-900 hover:decoration-sky-800"
-                  onclick={(e) => {
-                    e.preventDefault()
-                    void openPage(h.entity.id)
-                  }}
+                <button
+                  type="button"
+                  class="block w-full cursor-pointer text-left text-sm font-medium text-sky-700 underline decoration-sky-600/50 underline-offset-2 hover:text-sky-900 hover:decoration-sky-800"
+                  onclick={() => void openPage(h.entity.id)}
                 >
                   {h.title || '(untitled)'}
-                </a>
+                </button>
                 {#if h.snippet}
                   <p class="mt-0.5 line-clamp-2 pl-0 text-[10px] leading-snug text-zinc-500">{h.snippet}</p>
                 {/if}
@@ -432,16 +425,13 @@
                     <ul class="mt-1 list-none space-y-2 pl-0">
                       {#each toolHits as h (h.entity.id)}
                         <li>
-                          <a
-                            href={pageHref(h.entity.id)}
-                            class="text-[12px] font-medium text-sky-800 underline decoration-sky-600/50 underline-offset-2 hover:text-sky-950"
-                            onclick={(e) => {
-                              e.preventDefault()
-                              void openPage(h.entity.id)
-                            }}
+                          <button
+                            type="button"
+                            class="cursor-pointer text-left text-[12px] font-medium text-sky-800 underline decoration-sky-600/50 underline-offset-2 hover:text-sky-950"
+                            onclick={() => void openPage(h.entity.id)}
                           >
                             {h.title || '(untitled)'}
-                          </a>
+                          </button>
                           {#if h.snippet}
                             <p class="mt-0.5 line-clamp-2 text-[10px] leading-snug text-zinc-600">{h.snippet}</p>
                           {/if}
