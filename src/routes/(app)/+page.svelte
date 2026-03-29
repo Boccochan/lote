@@ -73,7 +73,7 @@
         type="button"
         class="rounded-md px-3 py-1 text-xs font-medium transition-colors focus-visible:outline focus-visible:ring-2 focus-visible:ring-zinc-400 {editorMode === 'edit'
           ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-300 ring-inset'
-          : 'text-zinc-500 hover:text-zinc-800'}"
+          : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/80 hover:text-zinc-800'}"
         data-testid="editor-mode-edit"
         onclick={() => {
           editorMode = 'edit'
@@ -82,7 +82,7 @@
         type="button"
         class="rounded-md px-3 py-1 text-xs font-medium transition-colors focus-visible:outline focus-visible:ring-2 focus-visible:ring-zinc-400 {editorMode === 'preview'
           ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-300 ring-inset'
-          : 'text-zinc-500 hover:text-zinc-800'}"
+          : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/80 hover:text-zinc-800'}"
         data-testid="editor-mode-preview"
         onclick={() => {
           editorMode = 'preview'
