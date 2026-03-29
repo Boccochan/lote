@@ -61,6 +61,7 @@
     "vitest": "^4.1.0"
   },
   "dependencies": {
+    "@humanspeak/svelte-markdown": "^1.2.0",
     "@tauri-apps/api": "^2.10.1"
   }
 }
