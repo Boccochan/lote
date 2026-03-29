@@ -1,3 +1,5 @@
+import { e2eLongDocAfter } from '$lib/e2e-long-doc-fixture'
+
 /** Shapes mirror `lote-app.svelte.ts` (avoid importing `.svelte.ts` from here). */
 export type E2eChatMsg = {
   role: string
@@ -61,8 +63,9 @@ function buildCreate(): E2eDemoPack {
 }
 
 function buildSave(selectedId: string): E2eDemoPack {
-  const nextTitle = `${E2E_AGENT_DEMO_TITLE} (edited)`
-  const nextBody = 'Edited body after AI save proposal.'
+  /** Same title as created page so the diff focuses on content only. */
+  const nextTitle = E2E_AGENT_DEMO_TITLE
+  const nextBody = e2eLongDocAfter()
   const toolContent = JSON.stringify({
     op: 'save',
     pageId: selectedId,
@@ -72,7 +75,10 @@ function buildSave(selectedId: string): E2eDemoPack {
   })
   return {
     messages: [
-      { role: 'user', content: 'Rename this page and update the body text.' },
+      {
+        role: 'user',
+        content: 'Update the opening and closing lines of the long document.',
+      },
       {
         role: 'assistant',
         content: 'Here is a proposed save. Confirm to apply.',

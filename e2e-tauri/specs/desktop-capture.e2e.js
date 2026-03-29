@@ -9,6 +9,17 @@ function shot(name) {
   return file
 }
 
+/** Must match `e2eLongDocBefore()` in `src/lib/e2e-long-doc-fixture.ts`. */
+function e2eLongDocBefore() {
+  const lines = []
+  for (let i = 1; i <= 100; i++) {
+    lines.push(
+      `Line ${i}: Lorem ipsum dolor sit amet, placeholder content for capture demo.`,
+    )
+  }
+  return lines.join('\n')
+}
+
 describe('Lote desktop capture', () => {
   it('captures AI agent proposal flow (create → edit → delete) and basic shell', async () => {
     const root = await browser.$('[data-testid="lote-app"]')
@@ -28,6 +39,15 @@ describe('Lote desktop capture', () => {
     await confirmCreate.click()
     await browser.pause(800)
     await browser.saveScreenshot(shot('03-ai-after-create-page-exists.png'))
+
+    const editorBody = await browser.$('[data-testid="editor-body"]')
+    await editorBody.waitForDisplayed({ timeout: 15_000 })
+    await editorBody.setValue(e2eLongDocBefore())
+    await browser.pause(200)
+    const editorSave = await browser.$('[data-testid="editor-save"]')
+    await editorSave.waitForClickable({ timeout: 15_000 })
+    await editorSave.click()
+    await browser.pause(800)
 
     await browser.execute(async () => {
       await globalThis.__loteSeedAgentDemo?.('save')

@@ -63,6 +63,8 @@ Prefer **`kebab-case`** values on the DOM (`data-testid="my-target"`). Reusable 
 | `lote-app` | Root shell in `src/routes/(app)/+layout.svelte` | Wait for app ready |
 | `btn-new-root-page` | “+ Page” in `src/routes/(app)/+layout.svelte` | Create root page in capture flow |
 | `editor-title` | Title field in `src/routes/(app)/+page.svelte` | Editor / title editing in capture flow |
+| `editor-body` | Body textarea in `src/routes/(app)/+page.svelte` (`TextArea`) | Seed long document before save-proposal capture |
+| `editor-save` | Save button in `src/routes/(app)/+page.svelte` | Persist editor before save-proposal diff screenshot |
 | `sidebar-settings` | Settings link in `src/routes/(app)/+layout.svelte` | Open `/settings` in capture flow (when present) |
 | `settings-view` | Settings panel in `src/routes/(app)/settings/+page.svelte` | Assert Settings view in capture flow (when present) |
 | `chat-input` | Chat message field in `src/routes/(app)/+layout.svelte` | Optional: chat input in capture flow |

@@ -27,7 +27,14 @@
       {/each}
     </select>
   </label>
-  <ActionButton variant="primary" disabled={!lote.selectedId} onclick={() => void savePage()}>Save</ActionButton>
+  <ActionButton
+    variant="primary"
+    dataTestId="editor-save"
+    disabled={!lote.selectedId}
+    onclick={() => void savePage()}
+  >
+    Save
+  </ActionButton>
   <ActionButton variant="danger" disabled={!lote.selectedId} onclick={() => void deletePage()}>Delete</ActionButton>
   {#if lote.status}
     <span class="text-xs text-zinc-500">{lote.status}</span>
@@ -36,6 +43,7 @@
 <TextArea
   plain
   class="min-h-0 flex-1 p-4 font-mono text-sm leading-relaxed text-zinc-800"
+  dataTestId="editor-body"
   placeholder="Markdown…"
   bind:value={lote.body}
 />

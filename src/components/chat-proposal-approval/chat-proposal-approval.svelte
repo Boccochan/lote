@@ -97,7 +97,7 @@
       {/if}
 
       {#if bodyDiff}
-        <p class="mt-2 text-[10px] font-medium text-zinc-600">Body</p>
+        <p class="mt-2 text-[10px] font-medium text-zinc-600">Content</p>
         <div
           class="mt-0.5 max-h-[280px] overflow-y-auto rounded border border-zinc-200 font-mono text-[10px] leading-snug"
         >
