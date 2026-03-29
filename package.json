@@ -65,6 +65,7 @@
     "vitest": "^4.1.0"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.10.1"
+    "@tauri-apps/api": "^2.10.1",
+    "diff": "^8.0.4"
   }
 }

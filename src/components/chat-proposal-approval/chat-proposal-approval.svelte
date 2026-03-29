@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ProposalPreview } from '$lib/proposal-preview'
+  import { diffBodyToRows } from '$lib/proposal-preview'
 
   import ActionButton from '../action-button'
 
@@ -25,6 +26,12 @@
     preview.kind === 'save' ? preview.before.body !== preview.after.body : false,
   )
 
+  const bodyRows = $derived(
+    preview.kind === 'save' && bodyDiff
+      ? diffBodyToRows(preview.before.body, preview.after.body)
+      : [],
+  )
+
   const saveHasAnyChange = $derived(
     preview.kind === 'save' ? titleDiff || parentDiff || bodyDiff : false,
   )
@@ -43,68 +50,79 @@
     </p>
     <p class="mt-1 text-[10px] text-zinc-500">Cancel to keep the page, or Approve to delete it.</p>
   {:else if preview.kind === 'create'}
-    <p class="text-[11px] font-semibold text-zinc-900">Create new page</p>
-
-    <p class="mt-3 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Before</p>
+    <p class="text-[11px] font-semibold text-zinc-900">New page</p>
+    <p class="mt-1 text-[10px] text-zinc-600">The following page will be created:</p>
     <div
-      class="mt-1 rounded border border-zinc-300 bg-white px-2.5 py-2 text-[10px] leading-relaxed text-zinc-600"
-    >
-      {preview.beforeSummary}
-    </div>
-
-    <p class="mt-3 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">After</p>
-    <div
-      class="mt-1 rounded border border-emerald-200 bg-green-50/80 px-2.5 py-2 text-[10px] leading-relaxed text-zinc-800"
+      class="mt-2 rounded border border-zinc-300 bg-white px-2.5 py-2 text-[10px] leading-relaxed text-zinc-800"
     >
       <p><span class="text-zinc-500">Title:</span> {preview.afterTitle}</p>
       <p class="mt-1.5"><span class="text-zinc-500">Parent:</span> {preview.afterParentLabel}</p>
     </div>
   {:else}
     <p class="text-[11px] font-semibold text-zinc-900">Save changes to page</p>
-    <p class="mt-1 text-[10px] text-zinc-500">Review what will change. Unchanged title or parent are hidden.</p>
+    <p class="mt-1 text-[10px] text-zinc-500">
+      Red = removed, green = added. Title and parent appear only if they change.
+    </p>
 
     {#if saveHasAnyChange}
-      <p class="mt-3 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Before</p>
-      <div
-        class="mt-1 rounded border border-zinc-300 bg-white px-2.5 py-2 text-[10px] leading-relaxed text-zinc-800"
-      >
-        {#if titleDiff}
-          <p><span class="text-zinc-500">Title:</span> {preview.before.title}</p>
-        {/if}
-        {#if parentDiff}
-          <p class={titleDiff ? 'mt-1.5' : ''}>
-            <span class="text-zinc-500">Parent:</span>
-            {preview.before.parentLabel}
-          </p>
-        {/if}
-        {#if bodyDiff}
-          <div class="{titleDiff || parentDiff ? 'mt-2 border-t border-zinc-200 pt-2' : ''}">
-            <pre class="whitespace-pre-wrap break-words font-mono text-[10px] leading-snug text-zinc-800">{preview
-              .before.body}</pre>
+      {#if titleDiff}
+        <p class="mt-2 text-[10px] font-medium text-zinc-600">Title</p>
+        <div class="mt-0.5 overflow-hidden rounded border border-zinc-200 font-mono text-[10px] leading-snug">
+          <div class="flex bg-red-50 text-red-900">
+            <span class="w-4 shrink-0 select-none px-1 text-center text-red-600">-</span>
+            <span class="min-w-0 flex-1 whitespace-pre-wrap break-words py-0.5 pr-1">{preview.before
+                .title}</span>
           </div>
-        {/if}
-      </div>
+          <div class="flex border-t border-zinc-100 bg-green-50 text-green-900">
+            <span class="w-4 shrink-0 select-none px-1 text-center text-green-700">+</span>
+            <span class="min-w-0 flex-1 whitespace-pre-wrap break-words py-0.5 pr-1">{preview.after.title}</span>
+          </div>
+        </div>
+      {/if}
 
-      <p class="mt-3 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">After</p>
-      <div
-        class="mt-1 rounded border border-emerald-200 bg-green-50/80 px-2.5 py-2 text-[10px] leading-relaxed text-zinc-800"
-      >
-        {#if titleDiff}
-          <p><span class="text-zinc-500">Title:</span> {preview.after.title}</p>
-        {/if}
-        {#if parentDiff}
-          <p class={titleDiff ? 'mt-1.5' : ''}>
-            <span class="text-zinc-500">Parent:</span>
-            {preview.after.parentLabel}
-          </p>
-        {/if}
-        {#if bodyDiff}
-          <div class="{titleDiff || parentDiff ? 'mt-2 border-t border-zinc-200 pt-2' : ''}">
-            <pre class="whitespace-pre-wrap break-words font-mono text-[10px] leading-snug text-zinc-800">{preview
-              .after.body}</pre>
+      {#if parentDiff}
+        <p class="mt-2 text-[10px] font-medium text-zinc-600">Parent</p>
+        <div class="mt-0.5 overflow-hidden rounded border border-zinc-200 font-mono text-[10px] leading-snug">
+          <div class="flex bg-red-50 text-red-900">
+            <span class="w-4 shrink-0 select-none px-1 text-center text-red-600">-</span>
+            <span class="min-w-0 flex-1 whitespace-pre-wrap break-words py-0.5 pr-1">{preview.before
+                .parentLabel}</span>
           </div>
-        {/if}
-      </div>
+          <div class="flex border-t border-zinc-100 bg-green-50 text-green-900">
+            <span class="w-4 shrink-0 select-none px-1 text-center text-green-700">+</span>
+            <span class="min-w-0 flex-1 whitespace-pre-wrap break-words py-0.5 pr-1">{preview.after
+                .parentLabel}</span>
+          </div>
+        </div>
+      {/if}
+
+      {#if bodyDiff}
+        <p class="mt-2 text-[10px] font-medium text-zinc-600">Body</p>
+        <div
+          class="mt-0.5 max-h-[280px] overflow-y-auto rounded border border-zinc-200 font-mono text-[10px] leading-snug"
+        >
+          {#each bodyRows as row, ri (ri)}
+            <div
+              class="flex min-h-[1.25rem] border-b border-zinc-100 last:border-b-0 {row.type === 'remove'
+                ? 'bg-red-50 text-red-950'
+                : row.type === 'add'
+                  ? 'bg-green-50 text-green-950'
+                  : 'bg-white text-zinc-700'}"
+            >
+              <span
+                class="w-4 shrink-0 select-none px-1 text-center {row.type === 'remove'
+                  ? 'text-red-600'
+                  : row.type === 'add'
+                    ? 'text-green-700'
+                    : 'text-zinc-400'}"
+              >
+                {row.type === 'remove' ? '-' : row.type === 'add' ? '+' : ' '}
+              </span>
+              <span class="min-w-0 flex-1 whitespace-pre-wrap break-words py-0.5 pr-1">{row.text || ' '}</span>
+            </div>
+          {/each}
+        </div>
+      {/if}
     {:else}
       <p class="mt-2 text-[10px] text-zinc-500">No field changes detected in this proposal.</p>
     {/if}

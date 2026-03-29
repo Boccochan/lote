@@ -2,11 +2,11 @@
  * UI-only preview for pending AI page proposals (before/after copy, not persisted).
  */
 
+import { diffLines } from 'diff'
+
 export type ProposalPreview =
   | {
       kind: 'create'
-      /** Short human label for the “before” column */
-      beforeSummary: string
       afterTitle: string
       afterParentLabel: string
     }
@@ -20,30 +20,38 @@ export type ProposalPreview =
       pageTitle: string
     }
 
-/** One row of body line comparison for save proposals. */
-export type BodyLineCompareRow = {
-  beforeLine: string
-  afterLine: string
-  /** Same text on both sides — no highlight */
-  unchanged: boolean
+/** One line in a git-style body diff (unchanged lines use neutral styling). */
+export type BodyDiffRow = {
+  type: 'unchanged' | 'add' | 'remove'
+  text: string
 }
 
 /**
- * Line-aligned comparison: differing lines get Before highlighted (red) and After (green) in the UI.
+ * Line-level diff for body text: removed lines → red, added → green, unchanged → neutral.
  */
-export function compareBodyLines(before: string, after: string): BodyLineCompareRow[] {
-  const a = before.split('\n')
-  const b = after.split('\n')
-  const n = Math.max(a.length, b.length)
-  const rows: BodyLineCompareRow[] = []
-  for (let i = 0; i < n; i++) {
-    const beforeLine = i < a.length ? a[i] : ''
-    const afterLine = i < b.length ? b[i] : ''
-    rows.push({
-      beforeLine,
-      afterLine,
-      unchanged: beforeLine === afterLine,
-    })
+export function diffBodyToRows(before: string, after: string): BodyDiffRow[] {
+  const parts = diffLines(before ?? '', after ?? '')
+  const rows: BodyDiffRow[] = []
+
+  for (const part of parts) {
+    const value = part.value
+    const lines =
+      value === ''
+        ? ['']
+        : value.endsWith('\n')
+          ? value.slice(0, -1).split('\n')
+          : value.split('\n')
+
+    for (const line of lines) {
+      if (part.added) {
+        rows.push({ type: 'add', text: line })
+      } else if (part.removed) {
+        rows.push({ type: 'remove', text: line })
+      } else {
+        rows.push({ type: 'unchanged', text: line })
+      }
+    }
   }
+
   return rows
 }

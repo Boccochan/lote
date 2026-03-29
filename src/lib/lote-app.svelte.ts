@@ -244,7 +244,6 @@ export async function refreshProposalPreview(): Promise<void> {
   if (p.op === 'create') {
     lote.pendingProposalPreview = {
       kind: 'create',
-      beforeSummary: 'No page yet',
       afterTitle: (p.title ?? 'Untitled').trim() || 'Untitled',
       afterParentLabel: parentFolderLabel(pages, p.parentId),
     }
