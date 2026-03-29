@@ -104,17 +104,21 @@
           {#each bodyRows as row, ri (ri)}
             {#if row.type === 'collapsed'}
               <div
-                class="flex min-h-[1.25rem] border-b border-sky-200/80 bg-sky-100/90 last:border-b-0"
+                class="border-b border-zinc-100 bg-white py-1.5 last:border-b-0"
                 data-testid="chat-proposal-body-collapsed"
                 role="presentation"
                 title="{row.omittedCount ?? 0} unchanged lines omitted"
               >
-                <span class="w-4 shrink-0 select-none px-1 text-center text-sky-500"></span>
-                <span
-                  class="min-w-0 flex-1 py-0.5 pr-1 text-center text-[10px] font-medium text-sky-800"
+                <div
+                  class="flex min-h-[1.25rem] rounded border border-sky-200/80 bg-sky-100/90"
                 >
-                  省略
-                </span>
+                  <span class="w-4 shrink-0 select-none px-1 text-center text-sky-500"></span>
+                  <span
+                    class="min-w-0 flex-1 py-0.5 pr-1 text-center text-[10px] font-medium text-sky-800"
+                  >
+                    省略
+                  </span>
+                </div>
               </div>
             {:else}
               <div
