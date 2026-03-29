@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { goto } from '$app/navigation'
 import { resolve } from '$app/paths'
 import { buildE2eAgentDemo } from '$lib/lote-app-e2e-seed'
+import type { ProposalPreview } from '$lib/proposal-preview'
 import type { PageDetail, PageMeta, SearchHit } from '$lib/types'
 
 /** Matches Rust `ChatMessage` / Ollama JSON (snake_case fields). */
@@ -47,6 +48,8 @@ export const lote = $state({
   chatBusy: false,
   /** Set when the model used a `propose_page_*` tool; cleared on confirm, dismiss, or new chat message. */
   pendingProposal: null as PageProposal | null,
+  /** Human-readable before/after for the approval card (not sent to the model). */
+  pendingProposalPreview: null as ProposalPreview | null,
   showAgentDebug: false,
   agentDebugTrace: [] as string[],
 
@@ -218,11 +221,83 @@ export async function deletePage() {
   }
 }
 
+function parentFolderLabel(pages: PageMeta[], parentId: string | null | undefined): string {
+  if (parentId === null || parentId === undefined || parentId === '') {
+    return 'Root'
+  }
+  const p = pages.find((x) => x.id === parentId)
+  return p?.title?.trim() || 'Folder'
+}
+
+/**
+ * Fills {@link lote.pendingProposalPreview} from current pages + disk so the UI can show Before/After without raw ids.
+ */
+export async function refreshProposalPreview(): Promise<void> {
+  const p = lote.pendingProposal
+  if (!p) {
+    lote.pendingProposalPreview = null
+    return
+  }
+  await loadPages()
+  const pages = lote.pages
+
+  if (p.op === 'create') {
+    lote.pendingProposalPreview = {
+      kind: 'create',
+      beforeSummary: 'No page yet',
+      afterTitle: (p.title ?? 'Untitled').trim() || 'Untitled',
+      afterParentLabel: parentFolderLabel(pages, p.parentId),
+    }
+    return
+  }
+
+  if (p.op === 'delete') {
+    let pageTitle = p.title?.trim()
+    if (!pageTitle && p.pageId) {
+      try {
+        const d = await invoke<PageDetail>('pages_get', { id: p.pageId })
+        pageTitle = d.meta.title
+      } catch {
+        pageTitle = undefined
+      }
+    }
+    lote.pendingProposalPreview = {
+      kind: 'delete',
+      pageTitle: pageTitle?.trim() || 'This page',
+    }
+    return
+  }
+
+  if (p.op === 'save' && p.pageId) {
+    try {
+      const d = await invoke<PageDetail>('pages_get', { id: p.pageId })
+      lote.pendingProposalPreview = {
+        kind: 'save',
+        before: {
+          title: d.meta.title,
+          body: d.body,
+          parentLabel: parentFolderLabel(pages, d.meta.parent_id),
+        },
+        after: {
+          title: p.title ?? '',
+          body: p.body ?? '',
+          parentLabel: parentFolderLabel(pages, p.parentId),
+        },
+      }
+    } catch {
+      lote.pendingProposalPreview = null
+    }
+    return
+  }
+
+  lote.pendingProposalPreview = null
+}
+
 /**
  * Populates chat + pending proposal to mimic an agent turn (desktop capture / PR screenshots only).
  * No-op unless the app was built with `VITE_E2E_CAPTURE=true`.
  */
-export function seedE2eAgentProposalDemo(scenario: 'create' | 'save' | 'delete'): void {
+export async function seedE2eAgentProposalDemo(scenario: 'create' | 'save' | 'delete'): Promise<void> {
   if (import.meta.env.VITE_E2E_CAPTURE !== 'true') {
     return
   }
@@ -230,14 +305,17 @@ export function seedE2eAgentProposalDemo(scenario: 'create' | 'save' | 'delete')
   const pack = buildE2eAgentDemo(scenario, lote.selectedId, lote.title)
   if (!pack) {
     lote.pendingProposal = null
+    lote.pendingProposalPreview = null
     return
   }
   lote.chatMessages = pack.messages as AgentChatMessage[]
-  lote.pendingProposal = pack.proposal
+  lote.pendingProposal = pack.proposal as PageProposal
+  await refreshProposalPreview()
 }
 
 export function dismissPendingProposal() {
   lote.pendingProposal = null
+  lote.pendingProposalPreview = null
 }
 
 export async function confirmPendingProposal() {
@@ -252,6 +330,7 @@ export async function confirmPendingProposal() {
         parentId: p.parentId && p.parentId !== '' ? p.parentId : null,
       })
       lote.pendingProposal = null
+      lote.pendingProposalPreview = null
       await loadPages()
       await openPage(meta.id)
       return
@@ -269,6 +348,7 @@ export async function confirmPendingProposal() {
         body: p.body ?? '',
       })
       lote.pendingProposal = null
+      lote.pendingProposalPreview = null
       await loadPages()
       if (lote.selectedId === id) {
         const d = await invoke<PageDetail>('pages_get', { id })
@@ -286,6 +366,7 @@ export async function confirmPendingProposal() {
       }
       await invoke('pages_delete', { id })
       lote.pendingProposal = null
+      lote.pendingProposalPreview = null
       if (lote.selectedId === id) {
         lote.selectedId = null
         lote.title = ''
@@ -307,6 +388,7 @@ export async function sendChat() {
   lote.chatBusy = true
   lote.err = ''
   lote.pendingProposal = null
+  lote.pendingProposalPreview = null
   const messages: AgentChatMessage[] = [...lote.chatMessages, { role: 'user', content: msg }]
   lote.chatMessages = messages
   lote.chatInput = ''
@@ -321,9 +403,11 @@ export async function sendChat() {
     const pending = result.pendingProposal
     lote.pendingProposal =
       pending && typeof pending === 'object' && 'op' in pending ? pending : null
+    await refreshProposalPreview()
   } catch (e) {
     lote.err = String(e)
     lote.agentDebugTrace = []
+    lote.pendingProposalPreview = null
   } finally {
     lote.chatBusy = false
   }

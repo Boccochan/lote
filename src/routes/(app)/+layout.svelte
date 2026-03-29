@@ -6,12 +6,10 @@
   import {
     confirmPendingProposal,
     dismissPendingProposal,
-    formatPageProposalLabel,
     loadPages,
     lote,
     newPage,
     openPage,
-    parsePageProposalFromTool,
     parseSearchHitsFromTool,
     runPageSearch,
     seedE2eAgentProposalDemo,
@@ -21,6 +19,7 @@
 
   import ActionButton from '../../components/action-button'
   import AppHeader from '../../components/app-header'
+  import ChatProposalApproval from '../../components/chat-proposal-approval/chat-proposal-approval.svelte'
   import ErrorBanner from '../../components/error-banner'
   import JsonPre from '../../components/json-pre'
   import PanelTitle from '../../components/panel-title'
@@ -159,21 +158,11 @@
           />
         {/if}
         <div class="min-h-0 flex-1 overflow-y-auto rounded-md border border-zinc-200 bg-white p-2 text-xs">
-          {#each lote.chatMessages.filter((m) => m.role !== 'system') as m, i (i)}
+          {#each lote.chatMessages.filter((m) => m.role !== 'system' && !(m.role === 'tool' && String(m.tool_name ?? '').startsWith('propose_page_'))) as m, i (i)}
             {#if m.role === 'user'}
               <div class="mb-2 text-zinc-800">
                 <span class="font-semibold">You:</span>
                 {m.content ?? ''}
-              </div>
-            {:else if m.role === 'tool' && m.tool_name && String(m.tool_name).startsWith('propose_page_')}
-              {@const prop = parsePageProposalFromTool(m.content)}
-              <div class="mb-2 rounded-md border border-amber-300/80 bg-amber-50/90 p-2 text-amber-950">
-                <span class="font-semibold">Proposed ({m.tool_name}):</span>
-                {#if prop}
-                  <p class="mt-1 text-[11px] leading-snug">{formatPageProposalLabel(prop)}</p>
-                {:else}
-                  <pre class="mt-1 max-h-24 overflow-auto whitespace-pre-wrap break-words font-mono text-[10px]">{m.content ?? ''}</pre>
-                {/if}
               </div>
             {:else if m.role === 'tool' && m.tool_name === 'search_pages'}
               {@const toolHits = parseSearchHitsFromTool(m.content)}
@@ -213,49 +202,25 @@
               <div class="mb-2 text-emerald-800">
                 <span class="font-semibold">Model:</span>
                 {m.content ?? ''}
-                {#if m.tool_calls?.length}
-                  <span class="text-zinc-500">
-                    [tools:
-                    {m.tool_calls.map((t) => t.function?.name ?? '?').join(', ')}]
-                  </span>
-                {/if}
               </div>
             {/if}
           {/each}
+          {#if lote.pendingProposal && lote.pendingProposalPreview}
+            <ChatProposalApproval
+              preview={lote.pendingProposalPreview}
+              busy={lote.chatBusy}
+              onApprove={() => void confirmPendingProposal()}
+              onCancel={() => dismissPendingProposal()}
+            />
+          {:else if lote.pendingProposal}
+            <div class="mb-2 rounded-md border border-amber-200 bg-amber-50/80 p-2 text-[10px] text-amber-950">
+              Loading preview…
+            </div>
+          {/if}
           {#if lote.chatBusy}
             <TypingDots />
           {/if}
         </div>
-        {#if lote.pendingProposal}
-          <div
-            class="mt-2 rounded-md border border-zinc-300 bg-white p-2 shadow-sm"
-            role="region"
-            aria-label="Confirm proposed page change"
-          >
-            <p class="text-[11px] font-medium text-zinc-800">
-              {formatPageProposalLabel(lote.pendingProposal)}
-            </p>
-            <p class="mt-1 text-[10px] text-zinc-500">
-              This action runs only if you confirm. Cancel leaves your notes unchanged.
-            </p>
-            <div class="mt-2 flex justify-end gap-1">
-              <ActionButton
-                dataTestId="chat-proposal-cancel"
-                disabled={lote.chatBusy}
-                onclick={() => dismissPendingProposal()}
-              >
-                Cancel
-              </ActionButton>
-              <ActionButton
-                dataTestId="chat-proposal-confirm"
-                disabled={lote.chatBusy}
-                onclick={() => void confirmPendingProposal()}
-              >
-                Confirm
-              </ActionButton>
-            </div>
-          </div>
-        {/if}
         <div class="mt-2 flex gap-1">
           <TextField
             class="min-w-0 flex-1 text-xs"

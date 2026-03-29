@@ -67,7 +67,8 @@ Prefer **`kebab-case`** values on the DOM (`data-testid="my-target"`). Reusable 
 | `settings-view` | Settings panel in `src/routes/(app)/settings/+page.svelte` | Assert Settings view in capture flow (when present) |
 | `chat-input` | Chat message field in `src/routes/(app)/+layout.svelte` | Optional: chat input in capture flow |
 | `chat-send` | Send button next to chat input | Optional: send in capture flow |
-| `chat-proposal-confirm` | Confirm on pending AI page proposal | Approve `propose_page_*` in capture flow |
+| `chat-proposal-panel` | Approval card in chat (`chat-proposal-approval.svelte`) | Review before/after or delete prompt |
+| `chat-proposal-approve` | Approve on pending AI page proposal | Apply `propose_page_*` in capture flow |
 | `chat-proposal-cancel` | Cancel on pending AI page proposal | Dismiss proposal in capture flow |
 
 Add or update a row **in the same PR** whenever you introduce or rename a `data-testid` used by `e2e-tauri/specs/desktop-capture.e2e.js` (or by a sibling spec under `e2e-tauri/specs/`). Remove rows if selectors are deleted from the spec.

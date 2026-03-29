@@ -17,37 +17,37 @@ describe('Lote desktop capture', () => {
 
     await browser.saveScreenshot(shot('01-app-ready.png'))
 
-    await browser.execute(() => {
-      globalThis.__loteSeedAgentDemo?.('create')
+    await browser.execute(async () => {
+      await globalThis.__loteSeedAgentDemo?.('create')
     })
     await browser.pause(400)
     await browser.saveScreenshot(shot('02-ai-propose-create.png'))
 
-    const confirmCreate = await browser.$('[data-testid="chat-proposal-confirm"]')
+    const confirmCreate = await browser.$('[data-testid="chat-proposal-approve"]')
     await confirmCreate.waitForClickable({ timeout: 15_000 })
     await confirmCreate.click()
     await browser.pause(800)
     await browser.saveScreenshot(shot('03-ai-after-create-page-exists.png'))
 
-    await browser.execute(() => {
-      globalThis.__loteSeedAgentDemo?.('save')
+    await browser.execute(async () => {
+      await globalThis.__loteSeedAgentDemo?.('save')
     })
     await browser.pause(400)
     await browser.saveScreenshot(shot('04-ai-propose-edit.png'))
 
-    const confirmSave = await browser.$('[data-testid="chat-proposal-confirm"]')
+    const confirmSave = await browser.$('[data-testid="chat-proposal-approve"]')
     await confirmSave.waitForClickable({ timeout: 15_000 })
     await confirmSave.click()
     await browser.pause(800)
     await browser.saveScreenshot(shot('05-ai-after-edit.png'))
 
-    await browser.execute(() => {
-      globalThis.__loteSeedAgentDemo?.('delete')
+    await browser.execute(async () => {
+      await globalThis.__loteSeedAgentDemo?.('delete')
     })
     await browser.pause(400)
     await browser.saveScreenshot(shot('06-ai-propose-delete.png'))
 
-    const confirmDel = await browser.$('[data-testid="chat-proposal-confirm"]')
+    const confirmDel = await browser.$('[data-testid="chat-proposal-approve"]')
     await confirmDel.waitForClickable({ timeout: 15_000 })
     await confirmDel.click()
     await browser.pause(800)
