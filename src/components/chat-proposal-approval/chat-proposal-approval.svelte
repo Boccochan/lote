@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ProposalPreview } from '$lib/proposal-preview'
-  import { diffBodyToRows } from '$lib/proposal-preview'
+  import { diffBodyToGutterRows } from '$lib/proposal-preview'
 
   import ActionButton from '../action-button'
 
@@ -28,7 +28,7 @@
 
   const bodyRows = $derived(
     preview.kind === 'save' && bodyDiff
-      ? diffBodyToRows(preview.before.body, preview.after.body)
+      ? diffBodyToGutterRows(preview.before.body, preview.after.body)
       : [],
   )
 
@@ -106,19 +106,28 @@
               class="flex min-h-[1.25rem] border-b border-zinc-100 last:border-b-0 {row.type === 'remove'
                 ? 'bg-red-50 text-red-950'
                 : row.type === 'add'
-                  ? 'bg-green-50 text-green-950'
-                  : 'bg-white text-zinc-700'}"
+                  ? 'bg-emerald-50/90 text-emerald-950'
+                  : 'bg-white text-zinc-800'}"
             >
               <span
-                class="w-4 shrink-0 select-none px-1 text-center {row.type === 'remove'
+                class="w-9 shrink-0 select-none border-r border-zinc-200/80 py-0.5 pl-1 pr-1 text-right tabular-nums text-zinc-400"
+                >{row.oldLine ?? ''}</span
+              >
+              <span
+                class="w-9 shrink-0 select-none border-r border-zinc-200/80 py-0.5 pl-1 pr-1 text-right tabular-nums text-zinc-400"
+                >{row.newLine ?? ''}</span
+              >
+              <span
+                class="w-5 shrink-0 select-none border-r border-zinc-200/80 py-0.5 pl-0.5 text-center tabular-nums {row.type ===
+                'remove'
                   ? 'text-red-600'
                   : row.type === 'add'
-                    ? 'text-green-700'
-                    : 'text-zinc-400'}"
+                    ? 'text-emerald-700'
+                    : 'text-zinc-300'}"
               >
                 {row.type === 'remove' ? '-' : row.type === 'add' ? '+' : ' '}
               </span>
-              <span class="min-w-0 flex-1 whitespace-pre-wrap break-words py-0.5 pr-1">{row.text || ' '}</span>
+              <span class="min-w-0 flex-1 whitespace-pre-wrap break-words py-0.5 pr-2 pl-1">{row.text || ' '}</span>
             </div>
           {/each}
         </div>

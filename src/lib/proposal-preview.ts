@@ -26,6 +26,14 @@ export type BodyDiffRow = {
   text: string
 }
 
+/** Same as {@link BodyDiffRow} plus unified-diff line numbers (GitHub-style gutters). */
+export type BodyDiffGutterRow = BodyDiffRow & {
+  /** Line index in the old file; null on pure additions. */
+  oldLine: number | null
+  /** Line index in the new file; null on pure removals. */
+  newLine: number | null
+}
+
 /**
  * Line-level diff for body text: removed lines → red, added → green, unchanged → neutral.
  */
@@ -54,4 +62,30 @@ export function diffBodyToRows(before: string, after: string): BodyDiffRow[] {
   }
 
   return rows
+}
+
+/**
+ * Unified diff rows with old/new line numbers for a two-column gutter (like GitHub PRs).
+ */
+export function diffBodyToGutterRows(before: string, after: string): BodyDiffGutterRow[] {
+  const base = diffBodyToRows(before, after)
+  let oldN = 0
+  let newN = 0
+  const out: BodyDiffGutterRow[] = []
+
+  for (const row of base) {
+    if (row.type === 'remove') {
+      oldN += 1
+      out.push({ ...row, oldLine: oldN, newLine: null })
+    } else if (row.type === 'add') {
+      newN += 1
+      out.push({ ...row, oldLine: null, newLine: newN })
+    } else {
+      oldN += 1
+      newN += 1
+      out.push({ ...row, oldLine: oldN, newLine: newN })
+    }
+  }
+
+  return out
 }
