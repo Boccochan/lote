@@ -64,7 +64,7 @@
       <span class="text-xs text-zinc-500">{lote.status}</span>
     {/if}
     <div
-      class="ml-auto inline-flex rounded-lg border border-zinc-200 bg-white p-0.5 shadow-sm"
+      class="ml-auto inline-flex rounded-lg border border-zinc-200/80 bg-zinc-100 p-0.5 shadow-sm"
       role="group"
       aria-label="Editor mode"
       data-testid="editor-mode-toggle"
@@ -73,7 +73,7 @@
         type="button"
         class="rounded-md px-3 py-1 text-xs font-medium transition-colors focus-visible:outline focus-visible:ring-2 focus-visible:ring-zinc-400 {editorMode === 'edit'
           ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-300 ring-inset'
-          : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/80 hover:text-zinc-800'}"
+          : 'bg-transparent text-zinc-600 hover:bg-zinc-200/70 hover:text-zinc-800'}"
         data-testid="editor-mode-edit"
         onclick={() => {
           editorMode = 'edit'
@@ -82,7 +82,7 @@
         type="button"
         class="rounded-md px-3 py-1 text-xs font-medium transition-colors focus-visible:outline focus-visible:ring-2 focus-visible:ring-zinc-400 {editorMode === 'preview'
           ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-300 ring-inset'
-          : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/80 hover:text-zinc-800'}"
+          : 'bg-transparent text-zinc-600 hover:bg-zinc-200/70 hover:text-zinc-800'}"
         data-testid="editor-mode-preview"
         onclick={() => {
           editorMode = 'preview'
