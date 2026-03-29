@@ -24,19 +24,13 @@
 
 ## Screenshots / recording
 
-<!-- Required when UI is user-visible. Omit or write "N/A" for non-UI changes. -->
+<!-- Omit this whole section when the PR does not change user-visible UI (docs-only, tooling-only, CI-only, etc.). -->
 
-### Before
+When UI **does** change:
 
-<!-- Image or "See base branch" -->
-
-### After
-
-<!-- Image or link. For Tauri desktop captures: use the Gist block from `npm run pr:attach-captures` — do not use `github.com/.../raw/<branch>/docs/...` for gitignored PNGs. -->
-
-### Demo video (optional)
-
-<!-- Short description of what the clip shows; link to uploaded video or Loom if not in-repo. -->
+- Prefer one short note and the **Screenshots (auto-uploaded)** block appended by `npm run pr:attach-captures` / `e2e:tauri:capture:publish` (Gist URLs). Do **not** link `github.com/.../raw/<branch>/docs/...` for gitignored capture files.
+- Add **Before / After** subsections only when a side-by-side comparison helps reviewers; otherwise skip them.
+- **Demo video**: include only if you have a clip; otherwise omit this line entirely.
 
 ## Checklist
 
