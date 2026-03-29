@@ -30,4 +30,18 @@ Automated WebView screenshots/video: `npm run e2e:tauri:capture` (needs `cargo i
 
 To **put screenshots in the PR description without committing binaries**, use `gh auth` and an **open PR** for the branch, then run **`npm run e2e:tauri:capture:publish`** from the repo root (one command: capture + upload PNGs to a public Gist + append image markdown to the PR body). Or run `e2e:tauri:capture` then `pr:attach-captures` separately. **Agents opening a PR** should run `e2e:tauri:capture:publish` locally after `gh pr create` when the change affects the Tauri desktop UI.
 
+### `data-testid` for capture (document here)
+
+If you add or change **`data-testid` / `dataTestId`** attributes **because** desktop E2E or PR screenshot automation needs stable selectors, **update this subsection in the same change** (or follow-up): add a row to the table and keep the list aligned with `e2e-tauri/specs/desktop-capture.e2e.js`. Prefer **`kebab-case`** values on the DOM (`data-testid="my-target"`). Reusable controls may expose `dataTestId` props (see `ActionButton`, `TextField`), which render as `data-testid` on the host element.
+
+| `data-testid` | Where used | Purpose |
+| --- | --- | --- |
+| `lote-app` | Root shell in `src/app.svelte` | Wait for app ready |
+| `btn-new-root-page` | “+ Page” in `src/app.svelte` | Create root page in capture flow |
+| `editor-title` | Title field in `src/app.svelte` | Editor / title editing in capture flow |
+| `sidebar-settings` | Settings row in `src/app.svelte` | Open Settings in capture flow (when present) |
+| `settings-view` | Settings placeholder panel in `src/app.svelte` | Assert empty Settings view in capture flow (when present) |
+
+Add or update a row **in the same PR** whenever you introduce or rename a `data-testid` used by `e2e-tauri/specs/desktop-capture.e2e.js` (or by a sibling spec under `e2e-tauri/specs/`). Remove rows if selectors are deleted from the spec.
+
 **Skill smoke test:** Use throwaway branches (for example `chore/skill-workflow-smoke`) to verify `gh pr create` plus optional `e2e:tauri:capture:publish`; merge or close the PR after confirming the workflow.
