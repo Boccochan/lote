@@ -63,6 +63,9 @@ Prefer **`kebab-case`** values on the DOM (`data-testid="my-target"`). Reusable 
 | `lote-app` | Root shell in `src/routes/(app)/+layout.svelte` | Wait for app ready |
 | `btn-new-root-page` | “+ Page” in `src/routes/(app)/+layout.svelte` | Create root page in capture flow |
 | `editor-title` | Title field in `src/routes/(app)/+page.svelte` | Editor / title editing in capture flow |
+| `editor-mode-edit` | Edit mode button in `src/routes/(app)/+page.svelte` | Switch to Markdown source editing |
+| `editor-mode-preview` | Preview mode button in `src/routes/(app)/+page.svelte` | Switch to rendered Markdown preview |
+| `markdown-preview` | Preview region in `src/routes/(app)/+page.svelte` | Rendered Markdown output (sanitized HTML) |
 | `sidebar-settings` | Settings link in `src/routes/(app)/+layout.svelte` | Open `/settings` in capture flow (when present) |
 | `settings-view` | Settings panel in `src/routes/(app)/settings/+page.svelte` | Assert Settings view in capture flow (when present) |
 
