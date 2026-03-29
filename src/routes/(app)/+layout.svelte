@@ -23,6 +23,7 @@
   import PanelTitle from '../../components/panel-title'
   import TextArea from '../../components/text-area'
   import TextField from '../../components/text-field'
+  import TypingDots from '../../components/typing-dots'
 
   let { children }: { children: Snippet } = $props()
 
@@ -204,7 +205,7 @@
             {/if}
           {/each}
           {#if lote.chatBusy}
-            <p class="text-zinc-400">…</p>
+            <TypingDots />
           {/if}
         </div>
         <div class="mt-2 flex gap-1">

@@ -174,6 +174,7 @@ export async function sendChat() {
   lote.chatBusy = true
   lote.err = ''
   const messages: AgentChatMessage[] = [...lote.chatMessages, { role: 'user', content: msg }]
+  lote.chatMessages = messages
   lote.chatInput = ''
   try {
     const result = await invoke<AgentChatResult>('agent_chat', {
