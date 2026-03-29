@@ -58,7 +58,14 @@
         {/each}
       </select>
     </label>
-    <ActionButton variant="primary" disabled={!lote.selectedId} onclick={() => void savePage()}>Save</ActionButton>
+    <ActionButton
+      variant="primary"
+      dataTestId="editor-save"
+      disabled={!lote.selectedId}
+      onclick={() => void savePage()}
+    >
+      Save
+    </ActionButton>
     <ActionButton variant="danger" disabled={!lote.selectedId} onclick={() => void deletePage()}>Delete</ActionButton>
     {#if lote.status}
       <span class="text-xs text-zinc-500">{lote.status}</span>

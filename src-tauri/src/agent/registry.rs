@@ -7,7 +7,7 @@ use async_trait::async_trait;
 use serde_json::{json, Value};
 use tauri::AppHandle;
 
-use crate::agent::types::ToolDefinition;
+use crate::agent::types::{PageProposal, ToolDefinition};
 use crate::commands::pages::search_pages;
 
 #[async_trait]
@@ -33,6 +33,9 @@ impl ToolRegistry {
         let mut r = Self::new();
         r.register(Arc::new(EchoTool));
         r.register(Arc::new(SearchPagesTool(app)));
+        r.register(Arc::new(ProposePageCreateTool));
+        r.register(Arc::new(ProposePageSaveTool));
+        r.register(Arc::new(ProposePageDeleteTool));
         r
     }
 
@@ -42,11 +45,7 @@ impl ToolRegistry {
     }
 
     pub fn definitions(&self) -> Vec<ToolDefinition> {
-        let mut v: Vec<ToolDefinition> = self
-            .handlers
-            .values()
-            .map(|h| h.definition())
-            .collect();
+        let mut v: Vec<ToolDefinition> = self.handlers.values().map(|h| h.definition()).collect();
         v.sort_by(|a, b| a.function.name.cmp(&b.function.name));
         v
     }
@@ -70,6 +69,13 @@ impl ToolRegistry {
     pub(crate) fn with_echo_only() -> Self {
         let mut r = Self::new();
         r.register(Arc::new(EchoTool));
+        r
+    }
+
+    /// Proposal delete tool only (agent loop short-circuit tests).
+    pub(crate) fn with_propose_delete_only() -> Self {
+        let mut r = Self::new();
+        r.register(Arc::new(ProposePageDeleteTool));
         r
     }
 }
@@ -155,6 +161,155 @@ impl ToolHandler for SearchPagesTool {
     }
 }
 
+/// Records a create-page proposal as JSON; does **not** call `pages_create` (user confirms in the UI).
+struct ProposePageCreateTool;
+
+#[async_trait]
+impl ToolHandler for ProposePageCreateTool {
+    fn definition(&self) -> ToolDefinition {
+        ToolDefinition {
+            typ: "function".into(),
+            function: crate::agent::types::ToolFunctionDef {
+                name: "propose_page_create".into(),
+                description: "Propose creating a new markdown page. Does not create anything until the user confirms in the app."
+                    .into(),
+                parameters: json!({
+                    "type": "object",
+                    "properties": {
+                        "title": { "type": "string", "description": "Title for the new page." },
+                        "parent_id": { "type": "string", "description": "Optional parent page id; omit or empty for a root-level page." }
+                    },
+                    "required": ["title"]
+                }),
+            },
+        }
+    }
+
+    async fn invoke(&self, arguments: &Value) -> Result<String, String> {
+        let title = arguments
+            .get("title")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "missing title".to_string())?
+            .to_string();
+        let parent_id = arguments
+            .get("parent_id")
+            .and_then(|v| v.as_str())
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
+        let proposal = PageProposal {
+            op: "create".into(),
+            page_id: None,
+            title: Some(title),
+            parent_id,
+            body: None,
+        };
+        serde_json::to_string(&proposal).map_err(|e| e.to_string())
+    }
+}
+
+/// Records an update proposal; does **not** call `pages_save` until the user confirms.
+struct ProposePageSaveTool;
+
+#[async_trait]
+impl ToolHandler for ProposePageSaveTool {
+    fn definition(&self) -> ToolDefinition {
+        ToolDefinition {
+            typ: "function".into(),
+            function: crate::agent::types::ToolFunctionDef {
+                name: "propose_page_save".into(),
+                description: "Propose saving (replacing) an existing page's title, parent, and body. Does not write until the user confirms."
+                    .into(),
+                parameters: json!({
+                    "type": "object",
+                    "properties": {
+                        "page_id": { "type": "string", "description": "Id of the page to update." },
+                        "title": { "type": "string", "description": "New title." },
+                        "parent_id": { "type": "string", "description": "Parent page id, or empty/null for root." },
+                        "body": { "type": "string", "description": "New markdown body text." }
+                    },
+                    "required": ["page_id", "title", "body"]
+                }),
+            },
+        }
+    }
+
+    async fn invoke(&self, arguments: &Value) -> Result<String, String> {
+        let page_id = arguments
+            .get("page_id")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "missing page_id".to_string())?
+            .to_string();
+        let title = arguments
+            .get("title")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "missing title".to_string())?
+            .to_string();
+        let body = arguments
+            .get("body")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "missing body".to_string())?
+            .to_string();
+        let parent_id = arguments
+            .get("parent_id")
+            .and_then(|v| if v.is_null() { None } else { v.as_str() })
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
+        let proposal = PageProposal {
+            op: "save".into(),
+            page_id: Some(page_id),
+            title: Some(title),
+            parent_id,
+            body: Some(body),
+        };
+        serde_json::to_string(&proposal).map_err(|e| e.to_string())
+    }
+}
+
+/// Records a delete proposal; does **not** call `pages_delete` until the user confirms.
+struct ProposePageDeleteTool;
+
+#[async_trait]
+impl ToolHandler for ProposePageDeleteTool {
+    fn definition(&self) -> ToolDefinition {
+        ToolDefinition {
+            typ: "function".into(),
+            function: crate::agent::types::ToolFunctionDef {
+                name: "propose_page_delete".into(),
+                description: "Propose deleting a page by id. Does not delete until the user confirms in the app."
+                    .into(),
+                parameters: json!({
+                    "type": "object",
+                    "properties": {
+                        "page_id": { "type": "string", "description": "Id of the page to delete." },
+                        "title": { "type": "string", "description": "Optional title for display in the confirmation UI." }
+                    },
+                    "required": ["page_id"]
+                }),
+            },
+        }
+    }
+
+    async fn invoke(&self, arguments: &Value) -> Result<String, String> {
+        let page_id = arguments
+            .get("page_id")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "missing page_id".to_string())?
+            .to_string();
+        let title = arguments
+            .get("title")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+        let proposal = PageProposal {
+            op: "delete".into(),
+            page_id: Some(page_id),
+            title,
+            parent_id: None,
+            body: None,
+        };
+        serde_json::to_string(&proposal).map_err(|e| e.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -174,5 +329,21 @@ mod tests {
         let r = ToolRegistry::with_echo_only();
         let defs = r.definitions();
         assert!(defs.iter().any(|d| d.function.name == "echo"));
+    }
+
+    #[tokio::test]
+    async fn propose_page_delete_returns_json_proposal() {
+        let r = ToolRegistry::with_propose_delete_only();
+        let out = r
+            .invoke(
+                "propose_page_delete",
+                &json!({ "page_id": "abc", "title": "Hi" }),
+            )
+            .await
+            .unwrap();
+        let p: PageProposal = serde_json::from_str(&out).unwrap();
+        assert_eq!(p.op, "delete");
+        assert_eq!(p.page_id.as_deref(), Some("abc"));
+        assert_eq!(p.title.as_deref(), Some("Hi"));
     }
 }

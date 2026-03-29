@@ -4,18 +4,22 @@
   import { resolve } from '$app/paths'
   import { page } from '$app/state'
   import {
+    confirmPendingProposal,
+    dismissPendingProposal,
     loadPages,
     lote,
     newPage,
     openPage,
     parseSearchHitsFromTool,
     runPageSearch,
+    seedE2eAgentProposalDemo,
     sendChat,
   } from '$lib/lote-app.svelte'
   import * as pageTree from '$lib/pages-helpers'
 
   import ActionButton from '../../components/action-button'
   import AppHeader from '../../components/app-header'
+  import ChatProposalApproval from '../../components/chat-proposal-approval/chat-proposal-approval.svelte'
   import ErrorBanner from '../../components/error-banner'
   import JsonPre from '../../components/json-pre'
   import PanelTitle from '../../components/panel-title'
@@ -29,6 +33,12 @@
 
   $effect(() => {
     void loadPages()
+  })
+
+  $effect(() => {
+    if (import.meta.env.VITE_E2E_CAPTURE === 'true') {
+      globalThis.__loteSeedAgentDemo = seedE2eAgentProposalDemo
+    }
   })
 </script>
 
@@ -148,7 +158,7 @@
           />
         {/if}
         <div class="min-h-0 flex-1 overflow-y-auto rounded-md border border-zinc-200 bg-white p-2 text-xs">
-          {#each lote.chatMessages.filter((m) => m.role !== 'system') as m, i (i)}
+          {#each lote.chatMessages.filter((m) => m.role !== 'system' && !(m.role === 'tool' && String(m.tool_name ?? '').startsWith('propose_page_'))) as m, i (i)}
             {#if m.role === 'user'}
               <div class="mb-2 text-zinc-800">
                 <span class="font-semibold">You:</span>
@@ -192,15 +202,21 @@
               <div class="mb-2 text-emerald-800">
                 <span class="font-semibold">Model:</span>
                 {m.content ?? ''}
-                {#if m.tool_calls?.length}
-                  <span class="text-zinc-500">
-                    [tools:
-                    {m.tool_calls.map((t) => t.function?.name ?? '?').join(', ')}]
-                  </span>
-                {/if}
               </div>
             {/if}
           {/each}
+          {#if lote.pendingProposal && lote.pendingProposalPreview}
+            <ChatProposalApproval
+              preview={lote.pendingProposalPreview}
+              busy={lote.chatBusy}
+              onApprove={() => void confirmPendingProposal()}
+              onCancel={() => dismissPendingProposal()}
+            />
+          {:else if lote.pendingProposal}
+            <div class="mb-2 rounded-md border border-amber-200 bg-amber-50/80 p-2 text-[10px] text-amber-950">
+              Loading preview…
+            </div>
+          {/if}
           {#if lote.chatBusy}
             <TypingDots />
           {/if}
@@ -208,12 +224,15 @@
         <div class="mt-2 flex gap-1">
           <TextField
             class="min-w-0 flex-1 text-xs"
+            dataTestId="chat-input"
             placeholder="Message…"
             bind:value={lote.chatInput}
             onkeydown={(e) =>
               e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), void sendChat())}
           />
-          <ActionButton disabled={lote.chatBusy} onclick={() => void sendChat()}>Send</ActionButton>
+          <ActionButton dataTestId="chat-send" disabled={lote.chatBusy} onclick={() => void sendChat()}>
+            Send
+          </ActionButton>
         </div>
       </section>
     </aside>

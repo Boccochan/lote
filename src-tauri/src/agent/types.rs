@@ -92,6 +92,32 @@ pub struct ToolFunctionDef {
     pub parameters: Value,
 }
 
+/// Structured page mutation proposed by the model; **not** applied until the user confirms in the UI.
+/// Serialized as the tool result string for `propose_page_*` tools and returned on [`AgentChatResult::pending_proposal`].
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PageProposal {
+    /// `"create"`, `"save"`, or `"delete"`.
+    pub op: String,
+    /// Target page id (required for save/delete).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub page_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub body: Option<String>,
+}
+
+/// Returns true for tools that record a proposal only (host stops the agent loop until the user acts in the UI).
+pub fn is_proposal_tool_name(name: &str) -> bool {
+    matches!(
+        name,
+        "propose_page_create" | "propose_page_save" | "propose_page_delete"
+    )
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentChatResult {
@@ -101,6 +127,9 @@ pub struct AgentChatResult {
     /// Human-readable lines for debugging tool usage (also logged with `log` in the agent loop).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub debug_trace: Vec<String>,
+    /// Set when the model used a `propose_page_*` tool: mutations run only after UI confirmation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending_proposal: Option<PageProposal>,
 }
 
 #[cfg(test)]
@@ -143,10 +172,7 @@ mod tests {
             ]
         }"#;
         let m: ChatMessage = serde_json::from_str(json).unwrap();
-        assert_eq!(
-            m.tool_calls.unwrap()[0].function.arguments["message"],
-            "x"
-        );
+        assert_eq!(m.tool_calls.unwrap()[0].function.arguments["message"], "x");
     }
 
     #[test]

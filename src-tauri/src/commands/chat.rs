@@ -4,11 +4,12 @@ use crate::agent::client::{chat_simple_user_message, create_chat_completion_clie
 use crate::agent::{run_agent_loop, AgentChatResult, ChatMessage, ToolRegistry};
 
 /// Reduces models imitating VS Code / Copilot / web search tool names that do not exist in this app.
-const AGENT_SYSTEM_PROMPT: &str = r#"You run inside the Lote app. The ONLY tools you may use are exactly those provided by the host: `echo` and `search_pages`.
+const AGENT_SYSTEM_PROMPT: &str = r#"You run inside the Lote app. The ONLY tools you may use are exactly those provided by the host: `echo`, `search_pages`, `propose_page_create`, `propose_page_save`, and `propose_page_delete`.
 
-- To search the user's local markdown notes or pages, you MUST call `search_pages` with a `query` string. Do not invent tool names (no vscode, copilot, websearch, google, or browser tools—they are not available).
-- Do not paste fake tool JSON in markdown. Use the API's native tool-calling mechanism so the host can run `search_pages`.
-- You cannot search the public web; only local pages via `search_pages`."#;
+- To search the user's local markdown notes or pages, call `search_pages` with a `query` string. You cannot search the public web.
+- To create, update, or delete pages, you MUST use the `propose_page_*` tools only. Those tools record what you want to do; the host does NOT apply changes until the user explicitly confirms in the UI. Never claim a page was created, saved, or deleted until after the user has confirmed (you will not see confirmation in-chat).
+- Do not invent other tool names (no vscode, copilot, websearch, google, or browser tools).
+- Prefer native tool-calling for `search_pages` and `propose_page_*`; do not paste fake tool JSON in markdown unless the host supports it."#;
 
 /// Provider-neutral non-streaming chat command.
 #[tauri::command]

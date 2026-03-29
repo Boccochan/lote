@@ -21,4 +21,9 @@
   )
 </script>
 
-<textarea class="{base} {className}" data-testid={dataTestId} bind:value {placeholder}></textarea>
+<textarea
+  class="{base} {className}"
+  data-testid={dataTestId}
+  bind:value
+  {placeholder}
+></textarea>

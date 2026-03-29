@@ -63,14 +63,23 @@ Prefer **`kebab-case`** values on the DOM (`data-testid="my-target"`). Reusable 
 | `lote-app` | Root shell in `src/routes/(app)/+layout.svelte` | Wait for app ready |
 | `btn-new-root-page` | “+ Page” in `src/routes/(app)/+layout.svelte` | Create root page in capture flow |
 | `editor-title` | Title field in `src/routes/(app)/+page.svelte` | Editor / title editing in capture flow |
-| `editor-body` | Body textarea in `src/routes/(app)/+page.svelte` | Markdown source in capture flow |
+| `editor-body` | Body textarea in `src/routes/(app)/+page.svelte` (`TextArea`) | Markdown source; seed long document before save-proposal capture |
+| `editor-save` | Save button in `src/routes/(app)/+page.svelte` | Persist editor before save-proposal diff screenshot |
 | `editor-mode-toggle` | Edit/Preview control group below the title bar in `src/routes/(app)/+page.svelte` | Segmented editor mode toggle (right-aligned) |
 | `editor-mode-edit` | Edit segment in `src/routes/(app)/+page.svelte` | Switch to Markdown source editing |
 | `editor-mode-preview` | Preview segment in `src/routes/(app)/+page.svelte` | Switch to rendered Markdown preview |
 | `markdown-preview` | Preview region in `src/routes/(app)/+page.svelte` | Rendered Markdown output (sanitized HTML) |
 | `sidebar-settings` | Settings link in `src/routes/(app)/+layout.svelte` | Open `/settings` in capture flow (when present) |
 | `settings-view` | Settings panel in `src/routes/(app)/settings/+page.svelte` | Assert Settings view in capture flow (when present) |
+| `chat-input` | Chat message field in `src/routes/(app)/+layout.svelte` | Optional: chat input in capture flow |
+| `chat-send` | Send button next to chat input | Optional: send in capture flow |
+| `chat-proposal-panel` | Approval card in chat (`chat-proposal-approval.svelte`) | Review before/after or delete prompt |
+| `chat-proposal-approve` | Approve on pending AI page proposal | Apply `propose_page_*` in capture flow |
+| `chat-proposal-cancel` | Cancel on pending AI page proposal | Dismiss proposal in capture flow |
+| `chat-proposal-body-collapsed` | “Omitted” row when long unchanged runs are folded (`chat-proposal-approval.svelte`) | Scroll into view before save-proposal capture |
 
 Add or update a row **in the same PR** whenever you introduce or rename a `data-testid` used by `e2e-tauri/specs/desktop-capture.e2e.js` (or by a sibling spec under `e2e-tauri/specs/`). Remove rows if selectors are deleted from the spec.
+
+Desktop PR capture builds with `VITE_E2E_CAPTURE=true` (see `e2e-tauri/wdio.conf.js`) so the app exposes `window.__loteSeedAgentDemo` for scripted screenshots of the agent proposal UI without a live Ollama round-trip.
 
 **Skill smoke test:** Use throwaway branches (for example `chore/skill-workflow-smoke`) to verify `gh pr create` plus optional `e2e:tauri:capture:publish`; merge or close the PR after confirming the workflow.
