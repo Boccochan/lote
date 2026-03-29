@@ -24,6 +24,28 @@ High-level rules for design and quality (linting covers style and many correctne
 
 Follow the project ESLint configuration in `eslint.config.js`. Changes should pass `npm run lint` with no errors.
 
+## Adding pages
+
+### Note pages (user content in the app)
+
+Lote stores **notes as pages** in local storage via Tauri, not as new files in this repo.
+
+- **Create a root-level page:** Click **+ Page** in the left sidebar (or use the control tagged `data-testid="btn-new-root-page"` in automation). This calls the backend to create a page with no parent.
+- **Create a child page:** Select a page in the sidebar, then click **+ Child**. The new page’s parent is the currently selected page.
+- **Edit:** Select a page in the tree, change the **Title** and body, then **Save**. Parent can be adjusted with the **Parent** dropdown when needed.
+- **Delete:** With a page selected, use **Delete** and confirm.
+
+Adding a note page does **not** add a `src/` file; it only changes application data through `invoke` (see Rust commands such as `pages_create`, `pages_list`, `pages_get`, `pages_save`, `pages_delete`).
+
+### Frontend routes (SvelteKit)
+
+When the frontend uses **SvelteKit** (filesystem routes under `src/routes/`), a **new URL / screen** is a new route file, separate from note pages above.
+
+- Put routes that share the main shell (sidebar, Ollama, MCP) under the same **route group** as the rest of the app (for example `src/routes/(app)/`), so they reuse `+layout.svelte`.
+- Add a page at a path by creating **`+page.svelte`** in that segment, e.g. `src/routes/(app)/example/+page.svelte` → `/example`.
+- Prefer **`resolve(...)`** from `$app/paths` with **`goto`** / `<a href={...}>` so links respect the base path and satisfy ESLint navigation rules.
+- If the screen needs the same shared UI state as the rest of the shell, extend the existing pattern (the `lote` object in `src/lib/lote-app.svelte.ts`) instead of duplicating `invoke` wiring.
+
 ## Tauri desktop capture (PR assets)
 
 Automated WebView screenshots/video: `npm run e2e:tauri:capture` (needs `cargo install tauri-driver --locked`; Windows downloads Edge WebDriver on first run). Outputs under `docs/pr-assets/tauri-desktop/` (gitignored PNG/MP4 so they are not committed).
