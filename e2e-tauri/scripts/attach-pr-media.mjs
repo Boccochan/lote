@@ -33,11 +33,6 @@ function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function extractGistId(stdout) {
-  const m = stdout.match(/gist\.github\.com\/(?:[^/\s]+\/)?([a-f0-9]+)/i)
-  return m ? m[1] : null
-}
-
 function readPngList(absDir) {
   const pngs = fs
     .readdirSync(absDir)
@@ -51,27 +46,32 @@ function readPngList(absDir) {
 }
 
 function createGistWithPngs(absDir, pngs) {
-  const filePaths = pngs.map((f) => path.join(absDir, f))
-  const create = spawnSync(
-    'gh',
-    ['gist', 'create', '--public', '-d', 'lote PR screenshots (automated)', ...filePaths],
-    { encoding: 'utf8' },
-  )
+  /** `gh gist create` rejects binary files; REST API accepts base64 in `content` per GitHub docs. */
+  const files = {}
+  for (const name of pngs) {
+    const buf = fs.readFileSync(path.join(absDir, name))
+    files[name] = { content: buf.toString('base64') }
+  }
+  const payload = {
+    description: 'lote PR screenshots (automated)',
+    public: true,
+    files,
+  }
+  const tmp = path.join(os.tmpdir(), `gist-create-${Date.now()}.json`)
+  fs.writeFileSync(tmp, JSON.stringify(payload), 'utf8')
+  const create = spawnSync('gh', ['api', 'gists', '-X', 'POST', '--input', tmp], {
+    encoding: 'utf8',
+  })
+  try {
+    fs.unlinkSync(tmp)
+  } catch {
+    /* ignore */
+  }
   if (create.status !== 0) {
     console.error(create.stderr || create.stdout)
     process.exit(create.status ?? 1)
   }
-  const gistId = extractGistId(create.stdout)
-  if (!gistId) {
-    console.error('[attach-pr-media] Could not parse gist URL from:', create.stdout)
-    process.exit(1)
-  }
-  const api = spawnSync('gh', ['api', `gists/${gistId}`], { encoding: 'utf8' })
-  if (api.status !== 0) {
-    console.error(api.stderr)
-    process.exit(api.status ?? 1)
-  }
-  return JSON.parse(api.stdout)
+  return JSON.parse(create.stdout)
 }
 
 function buildMediaSection(gist, pngs) {
