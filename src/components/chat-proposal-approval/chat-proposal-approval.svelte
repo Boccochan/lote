@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ProposalPreview } from '$lib/proposal-preview'
-  import { diffBodyToRows } from '$lib/proposal-preview'
+  import { diffBodyToProposalRows } from '$lib/proposal-preview'
 
   import ActionButton from '../action-button'
 
@@ -28,7 +28,7 @@
 
   const bodyRows = $derived(
     preview.kind === 'save' && bodyDiff
-      ? diffBodyToRows(preview.before.body, preview.after.body)
+      ? diffBodyToProposalRows(preview.before.body, preview.after.body)
       : [],
   )
 
@@ -102,24 +102,40 @@
           class="mt-0.5 max-h-[280px] overflow-y-auto rounded border border-zinc-200 font-mono text-[10px] leading-snug"
         >
           {#each bodyRows as row, ri (ri)}
-            <div
-              class="flex min-h-[1.25rem] border-b border-zinc-100 last:border-b-0 {row.type === 'remove'
-                ? 'bg-red-50 text-red-950'
-                : row.type === 'add'
-                  ? 'bg-green-50 text-green-950'
-                  : 'bg-white text-zinc-700'}"
-            >
-              <span
-                class="w-4 shrink-0 select-none px-1 text-center {row.type === 'remove'
-                  ? 'text-red-600'
-                  : row.type === 'add'
-                    ? 'text-green-700'
-                    : 'text-zinc-400'}"
+            {#if row.type === 'collapsed'}
+              <div
+                class="flex min-h-[1.25rem] border-b border-sky-200/80 bg-sky-100/90 last:border-b-0"
+                data-testid="chat-proposal-body-collapsed"
+                role="presentation"
+                title="{row.omittedCount ?? 0} unchanged lines omitted"
               >
-                {row.type === 'remove' ? '-' : row.type === 'add' ? '+' : ' '}
-              </span>
-              <span class="min-w-0 flex-1 whitespace-pre-wrap break-words py-0.5 pr-1">{row.text || ' '}</span>
-            </div>
+                <span class="w-4 shrink-0 select-none px-1 text-center text-sky-500"></span>
+                <span
+                  class="min-w-0 flex-1 py-0.5 pr-1 text-center text-[10px] font-medium text-sky-800"
+                >
+                  省略
+                </span>
+              </div>
+            {:else}
+              <div
+                class="flex min-h-[1.25rem] border-b border-zinc-100 last:border-b-0 {row.type === 'remove'
+                  ? 'bg-red-50 text-red-950'
+                  : row.type === 'add'
+                    ? 'bg-green-50 text-green-950'
+                    : 'bg-white text-zinc-700'}"
+              >
+                <span
+                  class="w-4 shrink-0 select-none px-1 text-center {row.type === 'remove'
+                    ? 'text-red-600'
+                    : row.type === 'add'
+                      ? 'text-green-700'
+                      : 'text-zinc-400'}"
+                >
+                  {row.type === 'remove' ? '-' : row.type === 'add' ? '+' : ' '}
+                </span>
+                <span class="min-w-0 flex-1 whitespace-pre-wrap break-words py-0.5 pr-1">{row.text || ' '}</span>
+              </div>
+            {/if}
           {/each}
         </div>
       {/if}

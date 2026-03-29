@@ -72,6 +72,7 @@ Prefer **`kebab-case`** values on the DOM (`data-testid="my-target"`). Reusable 
 | `chat-proposal-panel` | Approval card in chat (`chat-proposal-approval.svelte`) | Review before/after or delete prompt |
 | `chat-proposal-approve` | Approve on pending AI page proposal | Apply `propose_page_*` in capture flow |
 | `chat-proposal-cancel` | Cancel on pending AI page proposal | Dismiss proposal in capture flow |
+| `chat-proposal-body-collapsed` | “省略” row when long unchanged runs are folded (`chat-proposal-approval.svelte`) | Scroll into view before save-proposal capture |
 
 Add or update a row **in the same PR** whenever you introduce or rename a `data-testid` used by `e2e-tauri/specs/desktop-capture.e2e.js` (or by a sibling spec under `e2e-tauri/specs/`). Remove rows if selectors are deleted from the spec.
 

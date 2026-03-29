@@ -53,6 +53,10 @@ describe('Lote desktop capture', () => {
       await globalThis.__loteSeedAgentDemo?.('save')
     })
     await browser.pause(400)
+    const collapsedRow = await browser.$('[data-testid="chat-proposal-body-collapsed"]')
+    await collapsedRow.waitForDisplayed({ timeout: 15_000 })
+    await collapsedRow.scrollIntoView({ block: 'center' })
+    await browser.pause(200)
     await browser.saveScreenshot(shot('04-ai-propose-edit.png'))
 
     const confirmSave = await browser.$('[data-testid="chat-proposal-approve"]')
