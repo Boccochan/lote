@@ -116,7 +116,7 @@
                   <span
                     class="min-w-0 flex-1 py-0.5 pr-1 text-center text-[10px] font-medium text-sky-800"
                   >
-                    省略
+                    Omitted
                   </span>
                 </div>
               </div>
