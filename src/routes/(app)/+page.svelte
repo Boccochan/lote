@@ -63,26 +63,36 @@
     {#if lote.status}
       <span class="text-xs text-zinc-500">{lote.status}</span>
     {/if}
-    <div class="ml-auto flex items-center gap-1">
-      <ActionButton
-        variant={editorMode === 'edit' ? 'primary' : 'default'}
-        dataTestId="editor-mode-edit"
+    <div
+      class="ml-auto inline-flex rounded-lg border border-zinc-200 bg-white p-0.5 shadow-sm"
+      role="group"
+      aria-label="Editor mode"
+      data-testid="editor-mode-toggle"
+    >
+      <button
+        type="button"
+        class="rounded-md px-3 py-1 text-xs font-medium transition-colors focus-visible:outline focus-visible:ring-2 focus-visible:ring-zinc-400 {editorMode === 'edit'
+          ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-300 ring-inset'
+          : 'text-zinc-500 hover:text-zinc-800'}"
+        data-testid="editor-mode-edit"
         onclick={() => {
           editorMode = 'edit'
-        }}
-      >Edit</ActionButton>
-      <ActionButton
-        variant={editorMode === 'preview' ? 'primary' : 'default'}
-        dataTestId="editor-mode-preview"
+        }}>Edit</button>
+      <button
+        type="button"
+        class="rounded-md px-3 py-1 text-xs font-medium transition-colors focus-visible:outline focus-visible:ring-2 focus-visible:ring-zinc-400 {editorMode === 'preview'
+          ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-300 ring-inset'
+          : 'text-zinc-500 hover:text-zinc-800'}"
+        data-testid="editor-mode-preview"
         onclick={() => {
           editorMode = 'preview'
-        }}
-      >Preview</ActionButton>
+        }}>Preview</button>
     </div>
   </div>
   {#if editorMode === 'edit'}
     <TextArea
       plain
+      dataTestId="editor-body"
       class="min-h-0 flex-1 p-4 font-mono text-sm leading-relaxed text-zinc-800"
       placeholder="Markdown…"
       bind:value={lote.body}

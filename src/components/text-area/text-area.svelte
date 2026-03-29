@@ -4,11 +4,14 @@
     placeholder = '',
     plain = false,
     class: className = '',
+    dataTestId = undefined,
   }: {
     value?: string
     placeholder?: string
     plain?: boolean
     class?: string
+    /** Stable hook for desktop WebDriver / E2E. */
+    dataTestId?: string
   } = $props()
 
   const base = $derived(
@@ -18,4 +21,4 @@
   )
 </script>
 
-<textarea class="{base} {className}" bind:value {placeholder}></textarea>
+<textarea class="{base} {className}" data-testid={dataTestId} bind:value {placeholder}></textarea>
