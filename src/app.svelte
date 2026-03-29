@@ -324,6 +324,7 @@
       <div class="shrink-0 border-t border-zinc-200 p-2">
         <button
           type="button"
+          data-testid="sidebar-settings"
           class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm {mainView === 'settings'
             ? 'bg-zinc-200 text-zinc-900'
             : 'text-zinc-700 hover:bg-zinc-100'}"
@@ -353,7 +354,7 @@
     <!-- Editor or Settings -->
     <main class="flex min-h-0 flex-col">
       {#if mainView === 'settings'}
-        <div class="flex min-h-0 flex-1 flex-col px-6 py-8">
+        <div class="flex min-h-0 flex-1 flex-col px-6 py-8" data-testid="settings-view">
           <h1 class="text-lg font-semibold text-zinc-900">Settings</h1>
           <p class="mt-2 text-sm text-zinc-500">Preferences will appear here.</p>
         </div>
