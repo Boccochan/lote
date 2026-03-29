@@ -32,7 +32,7 @@
 
 ### After
 
-<!-- Image or link -->
+<!-- Image or link. For Tauri desktop captures: use the Gist block from `npm run pr:attach-captures` — do not use `github.com/.../raw/<branch>/docs/...` for gitignored PNGs. -->
 
 ### Demo video (optional)
 
