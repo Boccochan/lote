@@ -63,8 +63,10 @@
     {#if lote.status}
       <span class="text-xs text-zinc-500">{lote.status}</span>
     {/if}
+  </div>
+  <div class="flex shrink-0 justify-end border-b border-zinc-200 px-3 py-1.5">
     <div
-      class="ml-auto inline-flex rounded-lg border border-zinc-200/80 bg-zinc-100 p-0.5 shadow-sm"
+      class="inline-flex rounded-lg border border-zinc-200/80 bg-zinc-100 p-0.5 shadow-sm"
       role="group"
       aria-label="Editor mode"
       data-testid="editor-mode-toggle"

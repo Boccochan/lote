@@ -64,7 +64,7 @@ Prefer **`kebab-case`** values on the DOM (`data-testid="my-target"`). Reusable 
 | `btn-new-root-page` | “+ Page” in `src/routes/(app)/+layout.svelte` | Create root page in capture flow |
 | `editor-title` | Title field in `src/routes/(app)/+page.svelte` | Editor / title editing in capture flow |
 | `editor-body` | Body textarea in `src/routes/(app)/+page.svelte` | Markdown source in capture flow |
-| `editor-mode-toggle` | Edit/Preview control group in `src/routes/(app)/+page.svelte` | Segmented editor mode toggle |
+| `editor-mode-toggle` | Edit/Preview control group below the title bar in `src/routes/(app)/+page.svelte` | Segmented editor mode toggle (right-aligned) |
 | `editor-mode-edit` | Edit segment in `src/routes/(app)/+page.svelte` | Switch to Markdown source editing |
 | `editor-mode-preview` | Preview segment in `src/routes/(app)/+page.svelte` | Switch to rendered Markdown preview |
 | `markdown-preview` | Preview region in `src/routes/(app)/+page.svelte` | Rendered Markdown output (sanitized HTML) |
