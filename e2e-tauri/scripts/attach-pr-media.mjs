@@ -45,19 +45,15 @@ function readPngList(absDir) {
   return pngs
 }
 
-function createGistWithPngs(absDir, pngs) {
-  /** `gh gist create` rejects binary files; REST API accepts base64 in `content` per GitHub docs. */
-  const files = {}
-  for (const name of pngs) {
-    const buf = fs.readFileSync(path.join(absDir, name))
-    files[name] = { content: buf.toString('base64') }
-  }
+function createEmptyGist() {
   const payload = {
     description: 'lote PR screenshots (automated)',
     public: true,
-    files,
+    files: {
+      'README.md': { content: 'Automated desktop captures (PNGs pushed via git).\n' },
+    },
   }
-  const tmp = path.join(os.tmpdir(), `gist-create-${Date.now()}.json`)
+  const tmp = path.join(os.tmpdir(), `gist-init-${Date.now()}.json`)
   fs.writeFileSync(tmp, JSON.stringify(payload), 'utf8')
   const create = spawnSync('gh', ['api', 'gists', '-X', 'POST', '--input', tmp], {
     encoding: 'utf8',
@@ -72,6 +68,100 @@ function createGistWithPngs(absDir, pngs) {
     process.exit(create.status ?? 1)
   }
   return JSON.parse(create.stdout)
+}
+
+function getGhToken() {
+  const a = process.env.GH_TOKEN?.trim()
+  const b = process.env.GITHUB_TOKEN?.trim()
+  if (a) {
+    return a
+  }
+  if (b) {
+    return b
+  }
+  const t = spawnSync('gh', ['auth', 'token'], { encoding: 'utf8' })
+  if (t.status === 0 && t.stdout?.trim()) {
+    return t.stdout.trim()
+  }
+  return null
+}
+
+function pushPngsToGistRepo(gist, absDir, pngs) {
+  const token = getGhToken()
+  if (!token) {
+    console.error(
+      '[attach-pr-media] No GitHub token: set GH_TOKEN or run `gh auth login`, then retry.',
+    )
+    process.exit(1)
+  }
+  const id = gist.id
+  const pullUrl = gist.git_pull_url ?? `https://gist.github.com/${id}.git`
+  const u = new URL(pullUrl)
+  u.username = 'x-access-token'
+  u.password = token
+  const authedUrl = u.href
+  const work = fs.mkdtempSync(path.join(os.tmpdir(), 'gist-work-'))
+  const clone = spawnSync('git', ['clone', '--depth', '1', authedUrl, work], {
+    encoding: 'utf8',
+    env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+  })
+  if (clone.status !== 0) {
+    console.error(clone.stderr || clone.stdout)
+    try {
+      fs.rmSync(work, { recursive: true, force: true })
+    } catch {
+      /* ignore */
+    }
+    process.exit(clone.status ?? 1)
+  }
+  spawnSync('git', ['-C', work, 'config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'])
+  spawnSync('git', ['-C', work, 'config', 'user.name', 'attach-pr-media'])
+  for (const name of pngs) {
+    fs.copyFileSync(path.join(absDir, name), path.join(work, name))
+  }
+  const add = spawnSync('git', ['-C', work, 'add', ...pngs], { encoding: 'utf8' })
+  if (add.status !== 0) {
+    console.error(add.stderr)
+    process.exit(add.status ?? 1)
+  }
+  const commit = spawnSync('git', ['-C', work, 'commit', '-m', 'Add screenshots'], { encoding: 'utf8' })
+  if (commit.status !== 0) {
+    console.error(commit.stderr || commit.stdout)
+    try {
+      fs.rmSync(work, { recursive: true, force: true })
+    } catch {
+      /* ignore */
+    }
+    process.exit(commit.status ?? 1)
+  }
+  const push = spawnSync('git', ['-C', work, 'push', 'origin', 'HEAD'], {
+    encoding: 'utf8',
+    env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+  })
+  try {
+    fs.rmSync(work, { recursive: true, force: true })
+  } catch {
+    /* ignore */
+  }
+  if (push.status !== 0) {
+    console.error(push.stderr || push.stdout)
+    process.exit(push.status ?? 1)
+  }
+}
+
+function createGistWithPngs(absDir, pngs) {
+  /**
+   * JSON `content` stores text only; base64 is not decoded to binary, so `raw_url` would not be a PNG.
+   * Push real binaries via `git` to the gist repo (see gist `git_pull_url`).
+   */
+  const gist = createEmptyGist()
+  pushPngsToGistRepo(gist, absDir, pngs)
+  const refresh = spawnSync('gh', ['api', `gists/${gist.id}`], { encoding: 'utf8' })
+  if (refresh.status !== 0) {
+    console.error(refresh.stderr)
+    process.exit(refresh.status ?? 1)
+  }
+  return JSON.parse(refresh.stdout)
 }
 
 function buildMediaSection(gist, pngs) {
