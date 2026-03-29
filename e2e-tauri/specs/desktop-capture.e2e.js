@@ -30,5 +30,14 @@ describe('Lote desktop capture', () => {
     await browser.pause(400)
 
     await browser.saveScreenshot(shot('03-title-edited.png'))
+
+    const settingsBtn = await browser.$('[data-testid="sidebar-settings"]')
+    await settingsBtn.waitForClickable({ timeout: 15_000 })
+    await settingsBtn.click()
+    await browser.pause(400)
+
+    const settingsView = await browser.$('[data-testid="settings-view"]')
+    await settingsView.waitForDisplayed({ timeout: 15_000 })
+    await browser.saveScreenshot(shot('04-settings-empty.png'))
   })
 })
