@@ -38,11 +38,11 @@ Prefer **`kebab-case`** values on the DOM (`data-testid="my-target"`). Reusable 
 
 | `data-testid` | Where used | Purpose |
 | --- | --- | --- |
-| `lote-app` | Root shell in `src/routes/+page.svelte` | Wait for app ready |
-| `btn-new-root-page` | “+ Page” in `src/routes/+page.svelte` | Create root page in capture flow |
-| `editor-title` | Title field in `src/routes/+page.svelte` | Editor / title editing in capture flow |
-| `sidebar-settings` | Settings row in `src/routes/+page.svelte` | Open Settings in capture flow (when present) |
-| `settings-view` | Settings placeholder panel in `src/routes/+page.svelte` | Assert empty Settings view in capture flow (when present) |
+| `lote-app` | Root shell in `src/routes/(app)/+layout.svelte` | Wait for app ready |
+| `btn-new-root-page` | “+ Page” in `src/routes/(app)/+layout.svelte` | Create root page in capture flow |
+| `editor-title` | Title field in `src/routes/(app)/+page.svelte` | Editor / title editing in capture flow |
+| `sidebar-settings` | Settings link in `src/routes/(app)/+layout.svelte` | Open `/settings` in capture flow (when present) |
+| `settings-view` | Settings panel in `src/routes/(app)/settings/+page.svelte` | Assert Settings view in capture flow (when present) |
 
 Add or update a row **in the same PR** whenever you introduce or rename a `data-testid` used by `e2e-tauri/specs/desktop-capture.e2e.js` (or by a sibling spec under `e2e-tauri/specs/`). Remove rows if selectors are deleted from the spec.
 
