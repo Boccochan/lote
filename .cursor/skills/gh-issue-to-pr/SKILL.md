@@ -1,10 +1,10 @@
 ---
 name: gh-issue-to-pr
 description: >
-  Fetch a GitHub issue with gh, implement and add unit tests, run lint and typecheck
-  until clean (and Rust fmt/clippy when src-tauri changes), then open or update a PR
-  using the project pr skill. Use when the user gives an issue number or URL or asks to
-  implement an issue through to a pull request.
+  Fetch a GitHub issue with gh, create a git worktree from the default branch (e.g. main),
+  implement and add unit tests, run lint and typecheck until clean (and Rust fmt/clippy
+  when src-tauri changes), then open or update a PR using the project pr skill. Use when
+  the user gives an issue number or URL or asks to implement an issue through to a pull request.
 compatibility: Requires gh CLI authenticated (gh auth status). Windows uses PowerShell.
 ---
 
@@ -31,12 +31,38 @@ gh issue view <N> --json number,title,body,state,labels,assignees,url
 - If acceptance criteria are unclear, ask the user before coding.
 - Keep scope aligned with the issue; follow `AGENTS.md` (English for code and commits; PowerShell for shell examples).
 
-### 2. Implement
+### 2. Create a worktree from the default branch
+
+Implement the issue from a **git worktree** whose branch starts from the latest **default branch** (`main` or whatever `gh repo view` reports)—not from an unrelated branch or a stale base.
+
+1. `git fetch origin`
+2. Resolve `<base>`:
+
+   ```powershell
+   gh repo view --json defaultBranchRef -q .defaultBranchRef.name
+   ```
+
+3. Add a worktree with a new branch from `origin/<base>` (use a sibling path and a branch name that includes the issue number):
+
+   ```powershell
+   git fetch origin
+   $base = gh repo view --json defaultBranchRef -q .defaultBranchRef.name
+   $wt = "..\<repo>-issue-<N>"
+   $branch = "issue-<N>-<short-topic>"
+   git worktree add $wt -b $branch "origin/$base"
+   Set-Location $wt
+   ```
+
+4. Run implementation, tests, commits, and the PR steps from this worktree.
+
+**Exception:** If you are already in a checkout whose current branch was created from the latest `origin/<base>` and is dedicated to this issue, you may continue there instead of adding another worktree.
+
+### 3. Implement
 
 - Match existing project patterns; keep changes minimal and focused on the issue.
-- If the change touches **Rust** under `src-tauri/`, include Rust formatting and clippy in the quality gate (step 4).
+- If the change touches **Rust** under `src-tauri/`, include Rust formatting and clippy in the quality gate (step 5).
 
-### 3. Unit tests
+### 4. Unit tests
 
 From the repository root:
 
@@ -46,7 +72,7 @@ npm run test
 
 - Add or update tests for new behavior. The project uses Vitest with the **unit** project (`vitest run --project=unit`).
 
-### 4. Lint, typecheck, and Rust (repeat until clean)
+### 5. Lint, typecheck, and Rust (repeat until clean)
 
 **JavaScript / TypeScript / Svelte** (run for relevant changes; always before a PR):
 
@@ -66,12 +92,12 @@ npm run lint:rust
 
 - If the same failure persists after two fix attempts, stop and ask the user.
 
-### 5. Pull request
+### 6. Pull request
 
-Only after step 4 succeeds:
+Only after step 5 succeeds:
 
-1. Follow the project skill **`pr`** (`.agent/skills/pr/SKILL.md`): `git fetch origin`, review `git log` / `git diff` against the base branch, fill `.agent/skills/pr/references/PR_TEMPLATE.md`, then `gh pr create` or `gh pr edit`.
-2. Optional helper: `.\.agent\skills\pr\scripts\generate-pr-summary.ps1 -BaseBranch <base>`
+1. Follow the project skill **`pr`** (`.cursor/skills/pr/SKILL.md`): `git fetch origin`, review `git log` / `git diff` against the base branch, fill `.cursor/skills/pr/references/PR_TEMPLATE.md`, then `gh pr create` or `gh pr edit`.
+2. Optional helper: `.\.cursor\skills\pr\scripts\generate-pr-summary.ps1 -BaseBranch <base>`
 3. PR title and body in **English** unless the repository explicitly uses another language for PRs (`AGENTS.md`).
 
 ## Security

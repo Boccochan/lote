@@ -30,6 +30,8 @@ gh repo view --json defaultBranchRef -q .defaultBranchRef.name
 
 Use that value as `<base>` below, or the branch the user named.
 
+**Issue-driven implementation:** Prefer a branch created from `origin/<base>` in a dedicated **git worktree** so the PR compares cleanly to the default branch. See `.cursor/skills/gh-issue-to-pr/SKILL.md` (step 2).
+
 ### 2. Understand the diff from the base
 
 Replace `<base>` with the remote-tracking branch name (usually `main` or `master`):
@@ -43,7 +45,7 @@ git diff origin/<base>...HEAD
 Optional: run the helper script from the repo root (writes a markdown snippet you can paste into the PR body):
 
 ```powershell
-.\.agent\skills\pr\scripts\generate-pr-summary.ps1 -BaseBranch <base>
+.\.cursor\skills\pr\scripts\generate-pr-summary.ps1 -BaseBranch <base>
 ```
 
 ### 3. Fill the PR body
