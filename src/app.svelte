@@ -8,6 +8,7 @@
   import PanelTitle from './components/panel-title'
   import TextArea from './components/text-area'
   import TextField from './components/text-field'
+  import TypingDots from './components/typing-dots'
   import * as pageTree from './lib/pages-helpers'
   import type { PageDetail, PageMeta, SearchHit } from './lib/types'
 
@@ -181,10 +182,11 @@
   async function sendChat() {
     const msg = chatInput.trim()
     if (!msg || chatBusy) return
-    chatBusy = true
     err = ''
-    const messages: AgentChatMessage[] = [...chatMessages, { role: 'user', content: msg }]
+    chatMessages = [...chatMessages, { role: 'user', content: msg }]
     chatInput = ''
+    chatBusy = true
+    const messages: AgentChatMessage[] = [...chatMessages]
     try {
       const result = await invoke<AgentChatResult>('agent_chat', {
         model,
@@ -427,7 +429,7 @@
             {/if}
           {/each}
           {#if chatBusy}
-            <p class="text-zinc-400">…</p>
+            <TypingDots />
           {/if}
         </div>
         <div class="mt-2 flex gap-1">
